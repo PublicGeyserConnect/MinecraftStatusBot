@@ -3,12 +3,13 @@
 The is a Discord bot written in Java. Minimum Java version required to run the software is ###.
 
 If you wish to invite the publicly available bot instance, use the following link:
+
 https://discord.com/api/oauth2/authorize?client_id=1125537355734978561&permissions=1084480288832&scope=bot
 
 The following commands are available:
 
 `/ping`
-Like just about any other bot, is used to ping a specified server. By default, it'll check for both Java and Bedrock servers on the specific address.
+Like just about any other bot, is used to ping a specified server. By default, it'll check for both Java and Bedrock servers on the specified address.
 
 `/server add alias address port`
 This is used to add a server to your Discord's saved server list. You're allowed 5 saved servers
