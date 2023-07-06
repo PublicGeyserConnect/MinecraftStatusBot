@@ -6,6 +6,10 @@ If you wish to invite the publicly available bot instance, use the following lin
 
 https://discord.com/api/oauth2/authorize?client_id=1125537355734978561&permissions=1084480288832&scope=bot
 
+There is also a simple support Discord: 
+
+https://discord.gg/rFWgQxcV
+
 The following commands are available:
 
 `/ping`
