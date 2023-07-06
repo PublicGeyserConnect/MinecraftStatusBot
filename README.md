@@ -1,6 +1,6 @@
 # MinecraftStatusBot
 
-The is a Discord bot written in Java. Minimum Java version required to run the software is 17.
+The is a Discord bot written in Java. Minimum Java version required to run the software is 17. This bot is inspired from the code of [Doze's MCSS bot](https://github.com/Doze42/MCSS).
 
 If you wish to invite the publicly available bot instance, use the following link:
 
