@@ -2,6 +2,9 @@
 
 The is a Discord bot written in Java. Minimum Java version required to run the software is ###.
 
+If you wish to invite the publicly available bot instance, use the following link:
+https://discord.com/api/oauth2/authorize?client_id=1125537355734978561&permissions=1084480288832&scope=bot
+
 The following commands are available:
 
 /ping
