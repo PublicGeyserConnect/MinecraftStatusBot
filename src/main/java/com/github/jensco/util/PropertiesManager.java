@@ -66,4 +66,26 @@ public class PropertiesManager {
     public static String getSentryEnv() {
         return properties.getProperty("sentry-env");
     }
+
+    /**
+     * @return ShardID
+     */
+    public static String getShardsId() {
+        return properties.getProperty("shards-id");
+    }
+
+    /**
+     * @return totalShards
+     */
+    public static String getTotalShards() {
+        return properties.getProperty("total-shards");
+    }
+
+    /**
+     * @return serverName
+     */
+    public static String getServerName() {
+        return properties.getProperty("server-name");
+    }
+
 }

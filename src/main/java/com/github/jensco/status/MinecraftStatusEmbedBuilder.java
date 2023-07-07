@@ -1,10 +1,12 @@
 package com.github.jensco.status;
 
+import br.com.azalim.mcserverping.MCPingResponse;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
+import java.util.List;
 
 public class MinecraftStatusEmbedBuilder {
 

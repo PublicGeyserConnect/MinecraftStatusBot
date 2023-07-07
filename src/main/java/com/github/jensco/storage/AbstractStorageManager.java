@@ -42,4 +42,6 @@ public abstract class AbstractStorageManager {
     public abstract NotificationRecord getNotifiedDataByGuildId(String guildId);
 
     public abstract int getActiveServerCount();
+
+    public abstract int getUniqueGuildCount();
 }

@@ -51,7 +51,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
         try {
             // Insert the server information
             PreparedStatement insertStatement = connection.prepareStatement(
-                    "INSERT INTO servers (guildid, servername, serveraddress, serverport, active, favicon) VALUES (?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO servers (guildid, servername, serveraddress, serverport, active, favicon, activeplayerlist) VALUES (?, ?, ?, ?, ?, ?, ?)"
             );
             insertStatement.setString(1, guildId);
             insertStatement.setString(2, serverName);
@@ -59,6 +59,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
             insertStatement.setInt(4, serverPort);
             insertStatement.setBoolean(5, false);
             insertStatement.setString(6, favicon);
+            insertStatement.setBoolean(7, false);
 
             insertStatement.executeUpdate();
             insertStatement.close();
@@ -328,5 +329,22 @@ public class MySQLStorageManager extends AbstractStorageManager {
         }
 
         return count;
+    }
+
+    @Override
+    public int getUniqueGuildCount() {
+        int uniqueGuildCount = 0;
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT COUNT(DISTINCT guildid) AS count FROM servers");
+            if (resultSet.next()) {
+                uniqueGuildCount = resultSet.getInt("count");
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return uniqueGuildCount;
     }
 }

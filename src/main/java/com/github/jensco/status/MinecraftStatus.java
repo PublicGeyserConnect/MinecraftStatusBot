@@ -10,6 +10,7 @@ import com.github.jensco.records.StatusRecord;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ public class MinecraftStatus {
         int currentOnline = 0;
         long latency = 0;
         int openSlots = 0;
+        List<String> players = null;
 
         try {
             MCPingResponse javaData = javaDataFuture.get();
@@ -60,10 +62,15 @@ public class MinecraftStatus {
                 bedrockOnline = true;
             }
         } catch (InterruptedException | ExecutionException ignored) {
-            // Handle exceptions appropriately
+           return null;
         }
 
         return new StatusRecord(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots);
+    }
+
+    private <U> U getPlayerList() {
+
+        return null;
     }
 
     private MCPingResponse getJavaServerInfo() {

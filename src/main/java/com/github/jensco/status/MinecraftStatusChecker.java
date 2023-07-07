@@ -44,8 +44,10 @@ public class MinecraftStatusChecker {
                     if (channel != null) {
                         channel.retrieveMessageById(messageId).queue(
                                 message -> updateMessageEmbed(serverRecord, message, channel),
-                                exception -> Bot.getLogger().error("Failed to retrieve message with ID " + messageId)
-                        );
+                                exception -> {
+                                    Bot.getLogger().error("Could not locate status embed " + messageId);
+                                    Bot.storageManager.removeServer(serverRecord.guildId(), serverRecord.serverName());
+                                });
                     }
                 }, i * EMBED_UPDATE_DELAY_SECONDS, TimeUnit.SECONDS);
             }
@@ -78,7 +80,6 @@ public class MinecraftStatusChecker {
 
     private void serverOfflineWarningMessage(TextChannel channel, @NotNull ServerRecord data, String roleId) {
         int offlineCount = offlineCountMap.getOrDefault(data.serverName(), 0); // Get the offline count for the server
-        System.out.println(offlineCount);
         offlineCount++; // Increment the offline count
 
         if (offlineCount == 2) { // Check if the server has been offline for 2 consecutive loops

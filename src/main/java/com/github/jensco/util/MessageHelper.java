@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MessageHelper {
     /**
@@ -18,6 +19,7 @@ public class MessageHelper {
      * @throws IllegalArgumentException if event isn't CommandEvent or SlashCommandEvent
      * @return a MessageEmbed, or null if you want to pass it up
      */
+    @Nullable
     public static MessageEmbed errorResponse(Object event, String title, String message) {
         MessageEmbed embed = new EmbedBuilder()
                 .setTitle(title) // Set our title
@@ -52,17 +54,13 @@ public class MessageHelper {
     }
 
     @NotNull
-    public static MessageEmbed handleCommand(boolean error, String issue) {
+    public static MessageEmbed handleCommand(String issue, String title) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        if (error) {
-            embedBuilder.setTitle("Could not execute command")
-                    .addField("Reason", issue, true)
-                    .setColor(BotColors.FAILURE.getColor());
-        } else {
-            embedBuilder.setTitle("Command was executed successfully.")
-                    .addField("Info", issue, true)
-                    .setColor(BotColors.SUCCESS.getColor());
-        }
+
+        embedBuilder.setTitle(title)
+                .addField("Info", issue, true)
+                .setColor(BotColors.SUCCESS.getColor());
+
         return embedBuilder.build();
     }
 }

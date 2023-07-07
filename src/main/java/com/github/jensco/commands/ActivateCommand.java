@@ -5,18 +5,20 @@ import com.github.jensco.util.MessageHelper;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import com.github.jensco.Bot;
 import com.github.jensco.status.MinecraftStatusEmbedBuilder;
 import com.github.jensco.records.ServerRecord;
+import net.dv8tion.jda.internal.utils.Checks;
 import org.jetbrains.annotations.NotNull;
+
 
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class ActivateCommand extends SlashCommand {
     public ActivateCommand() {
@@ -31,13 +33,13 @@ public class ActivateCommand extends SlashCommand {
 
     @Override
     protected void execute(SlashCommandEvent event) {
-
     }
 
     public static class EnableEmbedSubCommand extends SlashCommand {
         public EnableEmbedSubCommand() {
             this.name = "enable";
             this.help = "Adds the status embed in the channel.";
+            this.cooldown = 20;
             this.userPermissions = new Permission[]{
                     Permission.MANAGE_SERVER
             };
@@ -49,44 +51,31 @@ public class ActivateCommand extends SlashCommand {
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
             String serverName = event.optString("alias");
-            // get server info
+
+            InteractionHook interactionHook = event.deferReply().complete();
+
             ServerRecord info = Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId());
-            // check if there is a server match
+
             if (info == null) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "The server you tried to enablee was not found.")).queue();
+                interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "The server you tried to enable was not found."))
+                        .queue();
                 return;
             }
 
             if (info.active()) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "Server embed is already active.")).queue();
+                interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "Server status embed is already active."))
+                        .queue();
                 return;
             }
 
-            event.replyEmbeds(MessageHelper.handleCommand(false, "Server embed is being enabled, embed will be visible in +- 4 seconds.")).queue();
-            MinecraftStatus data = new MinecraftStatus(info.serverAddress(), info.serverPort());
-            // create server status embed
-            MessageEmbed embed = MinecraftStatusEmbedBuilder.statusEmbed(
-                    info.serverAddress(),
-                    data,
-                    info.favicon());
-
-            Message sentMessage = null;
-            try {
-                //send embed to channel
-                sentMessage = Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId())).sendMessageEmbeds(embed).complete();
-            } catch (
-                    ErrorResponseException e) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "Failed to send message to channel: " + e.getErrorResponse().getMeaning())).queue();
-
-            }
-            // set channel messageID and channelID
-            assert sentMessage != null;
-            Bot.storageManager.setServerMessageAndChannelId(
-                    event.getGuild().getId(), serverName,
-                    sentMessage.getId(),
-                    event.getChannel().getId(),
-                    true);
-
+            interactionHook.editOriginalEmbeds(handle(info))
+                    .queueAfter(1, TimeUnit.SECONDS, sentMessage -> {
+                        Bot.storageManager.setServerMessageAndChannelId(
+                                event.getGuild().getId(), serverName,
+                                sentMessage.getId(),
+                                event.getChannel().getId(),
+                                true);
+                    });
         }
     }
 
@@ -94,6 +83,7 @@ public class ActivateCommand extends SlashCommand {
         public DisableEmbedSubCommand() {
             this.name = "disable";
             this.help = "Disables the embed.";
+            this.cooldown = 20;
             this.userPermissions = new Permission[]{
                     Permission.MANAGE_SERVER
             };
@@ -105,29 +95,38 @@ public class ActivateCommand extends SlashCommand {
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
             String serverName = event.optString("alias");
+            Checks.notNull(event.getGuild(), "server");
             ServerRecord info = Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId());
 
             if (info == null) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "The server you are looking for was not found in our database")).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Status Embed Settings", "The server you are looking for was not found in our database"))).queue();
                 return;
             }
 
             if (!info.active()) {
-                event.replyEmbeds(MessageHelper.handleCommand(false, "Server embed was already disabled")).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Status Embed Settings", "Server embed was already disabled"))).queue();
                 return;
             }
 
-            // Retrieve the channelId and messageId from the ServerInfo object
-            String channelId = info.channelID();
-            String messageId = info.messageID();
             // Remove the embed message using the channelId and messageId
             Objects.requireNonNull(event.getGuild()
-                            .getTextChannelById(channelId))
-                    .retrieveMessageById(messageId)
-                    .queue(message -> message.delete().queue());
-
-            event.replyEmbeds(MessageHelper.handleCommand(false, "Server embed **" + serverName + "** is disabled.")).queue();
-            Bot.storageManager.setServerActiveStatus(event.getGuild().getId(), serverName, false);
+                            .getTextChannelById(info.channelID()))
+                    .retrieveMessageById(info.messageID())
+                    .queue(message -> {
+                        message.delete().queue();
+                        event.replyEmbeds(MessageHelper.handleCommand("Server embed **" + serverName + "** is disabled.", "Status Embed Settings")).queue();
+                        Bot.storageManager.setServerActiveStatus(event.getGuild().getId(), serverName, false);
+                    });
         }
+    }
+
+    @NotNull
+    private static MessageEmbed handle(@NotNull ServerRecord info) {
+        MinecraftStatus data = new MinecraftStatus(info.serverAddress(), info.serverPort());
+        // create server status embed
+        return MinecraftStatusEmbedBuilder.statusEmbed(
+                info.serverAddress(),
+                data,
+                info.favicon());
     }
 }

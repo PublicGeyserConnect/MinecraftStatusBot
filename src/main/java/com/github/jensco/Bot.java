@@ -93,8 +93,8 @@ public class Bot {
                             GatewayIntent.GUILD_MEMBERS,
                             GatewayIntent.GUILD_PRESENCES,
                             GatewayIntent.MESSAGE_CONTENT)
-                    .setShardsTotal(1) // Total number of shards
-                    .setShards(0) // Shard index to run (0 to Total-1)
+                    .setShardsTotal(Integer.parseInt(PropertiesManager.getTotalShards())) // Total number of shards
+                    .setShards(Integer.parseInt(PropertiesManager.getShardsId()))
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)

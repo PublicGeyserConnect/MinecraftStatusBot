@@ -328,4 +328,21 @@ public class SqliteStorageManager extends AbstractStorageManager {
 
         return count;
     }
+
+    @Override
+    public int getUniqueGuildCount() {
+        int uniqueGuildCount = 0;
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT COUNT(DISTINCT guildid) AS count FROM servers");
+            if (resultSet.next()) {
+                uniqueGuildCount = resultSet.getInt("count");
+            }
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return uniqueGuildCount;
+    }
 }

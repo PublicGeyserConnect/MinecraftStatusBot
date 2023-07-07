@@ -13,6 +13,7 @@ import net.dv8tion.jda.internal.utils.Checks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
+import java.util.Objects;
 
 public class NotificationCommand extends SlashCommand {
 
@@ -55,19 +56,19 @@ public class NotificationCommand extends SlashCommand {
             assert roleid != null;
             Role role = event.getGuild().getRoleById(roleid);
             if (role == null) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "The roleID you tried to add is not a valid role ID.")).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "The roleID you tried to add is not a valid role ID."))).queue();
                 return;
             }
 
             NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
             if (notify != null && !notify.role().isEmpty()) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "A role is already assigned to notification: " + notify.role())).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings","A role is already assigned to notification: " + notify.role()))).queue();
                 return;
             }
 
             // Save the notification in the database
             Bot.storageManager.setNotifyRole(guildId, roleid);
-            event.replyEmbeds(MessageHelper.handleCommand(false, "RoleID for notification set successfully.")).queue();
+            event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "RoleID for notification set successfully."))).queue();
         }
     }
 
@@ -88,13 +89,13 @@ public class NotificationCommand extends SlashCommand {
             NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
 
             if (notify == null) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "You need to add a roleID before you can enable notifications")).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "You need to add a roleID before you can enable notifications"))).queue();
                 return;
             }
 
             // Save the notification in the database
             Bot.storageManager.activeNotify(guildId, true);
-            event.replyEmbeds(MessageHelper.handleCommand(false, "Notifications are enabled.")).queue();
+            event.replyEmbeds(MessageHelper.handleCommand("Notifications are enabled.", "Notification settings")).queue();
         }
     }
 
@@ -116,9 +117,9 @@ public class NotificationCommand extends SlashCommand {
 
             if (notify != null) {
                 Bot.storageManager.removeNotifyRole(guildId);
-                event.replyEmbeds(MessageHelper.handleCommand(false, "Notification settings removed")).queue();
+                event.replyEmbeds(MessageHelper.handleCommand("Notification settings removed", "Notification Settings")).queue();
             } else {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "No notification data was found for this server")).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "No notification data was found for this server"))).queue();
             }
         }
     }
@@ -140,17 +141,16 @@ public class NotificationCommand extends SlashCommand {
             NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
 
             if (notify == null) {
-                event.replyEmbeds(MessageHelper.handleCommand(true, "No notification data was found for this server")).queue();
+                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "No notification data was found for this server"))).queue();
                 return;
             }
 
             String stringBuilder =
-                    "\n\nNotification Data:" +
                     "\nRole: " + notify.role() +
                     "\nActive: " + notify.active();
 
             // Save the notification in the database
-            event.replyEmbeds(MessageHelper.handleCommand(false, stringBuilder)).queue();
+            event.replyEmbeds(MessageHelper.handleCommand(stringBuilder, "Notification Settings")).queue();
         }
     }
 }
