@@ -1,5 +1,6 @@
 package com.github.jensco;
 
+import com.github.jensco.playerlist.PlayerListUpdater;
 import com.github.jensco.util.PropertiesManager;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.command.SlashCommand;
@@ -14,7 +15,7 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
-import com.github.jensco.status.MinecraftStatusChecker;
+import com.github.jensco.status.MinecraftStatusUpdater;
 import com.github.jensco.storage.AbstractStorageManager;
 import com.github.jensco.storage.StorageType;
 import com.github.jensco.util.SentryEventManager;
@@ -115,13 +116,19 @@ public class Bot {
         // Register listeners
         shardManager.addEventListener();
 
-        MinecraftStatusChecker updater = new MinecraftStatusChecker();
-        updater.startUpdateLoop();
+        MinecraftStatusUpdater statusUpdater = new MinecraftStatusUpdater();
+        PlayerListUpdater playerListUpdater = new PlayerListUpdater();
+        statusUpdater.startUpdateLoop();
+        playerListUpdater.startUpdateLoop();
 
         generalThreadPool.scheduleAtFixedRate(() -> {
             shardManager.getShardById(0).getPresence().setActivity(Activity.playing("Currently monitoring: " + storageManager.getActiveServerCount() + " active servers."));
         }, 5, 60 * 5, TimeUnit.SECONDS);
 
+        // Shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(Bot::shutdown));
+
+        LOGGER.info("MinecraftStatusBot has been started");
     }
 
     private static SlashCommand[] getSlashCommands() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
@@ -150,5 +157,14 @@ public class Bot {
 
     public static Logger getLogger() {
         return LOGGER;
+    }
+
+    public static void shutdown() {
+        Bot.LOGGER.info("Shutting down storage...");
+        storageManager.closeStorage();
+        Bot.LOGGER.info("Shutting down thread pool...");
+        generalThreadPool.shutdown();
+        Bot.LOGGER.info("Finished shutdown, exiting!");
+        System.exit(0);
     }
 }

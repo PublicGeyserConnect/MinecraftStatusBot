@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class MessageHelper {
     /**
@@ -19,7 +18,7 @@ public class MessageHelper {
      * @throws IllegalArgumentException if event isn't CommandEvent or SlashCommandEvent
      * @return a MessageEmbed, or null if you want to pass it up
      */
-    @Nullable
+    @NotNull
     public static MessageEmbed errorResponse(Object event, String title, String message) {
         MessageEmbed embed = new EmbedBuilder()
                 .setTitle(title) // Set our title
@@ -50,7 +49,7 @@ public class MessageHelper {
             throw new IllegalArgumentException("Event must be one of CommandEvent, SlashCommandEvent");
         }
 
-        return null;
+        return embed;
     }
 
     @NotNull

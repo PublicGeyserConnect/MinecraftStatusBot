@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import com.github.jensco.util.BotColors;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -46,7 +47,7 @@ public class PingCommand extends SlashCommand {
         interactionHook.editOriginalEmbeds(handle(ip)).queue();
     }
 
-    private MessageEmbed handle(String ip) {
+    private MessageEmbed handle(@NotNull String ip) {
         // Check we were given a valid IP/domain
         if (!ip.matches("[\\w.\\-:]+")) {
             return MessageHelper.errorResponse(null, "IP invalid", "The given IP appears to be invalid and won't be queried. If you believe this is incorrect please contact an admin.");

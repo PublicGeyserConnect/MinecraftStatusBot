@@ -1,6 +1,7 @@
 package com.github.jensco.storage;
 
-import com.github.jensco.records.ServerRecord;
+import com.github.jensco.records.PlayerListDataRecord;
+import com.github.jensco.records.ServerDataRecord;
 import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.util.PropertiesManager;
 
@@ -36,9 +37,19 @@ public class MySQLStorageManager extends AbstractStorageManager {
                 "PRIMARY KEY (guildid)" +
                 ")";
 
+        String createPlayerListTableQuery = "CREATE TABLE IF NOT EXISTS playerlist (" +
+                "guildid VARCHAR(255) NOT NULL, " +
+                "servername VARCHAR(255) NOT NULL, " +
+                "messageid VARCHAR(255) NOT NULL, " +
+                "channelid VARCHAR(255) NOT NULL, " +
+                "active BOOLEAN NOT NULL, " +
+                "PRIMARY KEY (guildid, servername)" +
+                ")";
+
         Statement createTables = connection.createStatement();
         createTables.executeUpdate(createTableQuery);
         createTables.executeUpdate(createNotificationTableQuery);
+        createTables.executeUpdate(createPlayerListTableQuery);
         createTables.close();
     }
 
@@ -51,7 +62,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
         try {
             // Insert the server information
             PreparedStatement insertStatement = connection.prepareStatement(
-                    "INSERT INTO servers (guildid, servername, serveraddress, serverport, active, favicon, activeplayerlist) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO servers (guildid, servername, serveraddress, serverport, active, favicon) VALUES (?, ?, ?, ?, ?, ?)"
             );
             insertStatement.setString(1, guildId);
             insertStatement.setString(2, serverName);
@@ -59,7 +70,6 @@ public class MySQLStorageManager extends AbstractStorageManager {
             insertStatement.setInt(4, serverPort);
             insertStatement.setBoolean(5, false);
             insertStatement.setString(6, favicon);
-            insertStatement.setBoolean(7, false);
 
             insertStatement.executeUpdate();
             insertStatement.close();
@@ -114,8 +124,8 @@ public class MySQLStorageManager extends AbstractStorageManager {
 
 
     @Override
-    public ServerRecord getServerInfoByServerName(String serverName, String guildId) {
-        ServerRecord serverRecord = null;
+    public ServerDataRecord getServerInfoByServerName(String serverName, String guildId) {
+        ServerDataRecord serverDataRecord = null;
         try {
             PreparedStatement selectStatement = connection.prepareStatement(
                     "SELECT guildid, servername, serveraddress, serverport, active, messageid, channelid, favicon FROM servers WHERE servername = ? AND guildid = ?"
@@ -133,7 +143,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
                 String channelId = resultSet.getString("channelid");
                 String favicon = resultSet.getString("favicon");
 
-                serverRecord = new ServerRecord(guildId, name, address, port, active, messageID, channelId, favicon);
+                serverDataRecord = new ServerDataRecord(guildId, name, address, port, active, messageID, channelId, favicon);
             }
 
             resultSet.close();
@@ -141,7 +151,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return serverRecord;
+        return serverDataRecord;
     }
 
     @Override
@@ -181,8 +191,8 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public List<ServerRecord> getAllActiveServers() {
-        List<ServerRecord> activeServers = new ArrayList<>();
+    public List<ServerDataRecord> getAllActiveServers() {
+        List<ServerDataRecord> activeServers = new ArrayList<>();
 
         try {
             PreparedStatement selectStatement = connection.prepareStatement(
@@ -201,8 +211,8 @@ public class MySQLStorageManager extends AbstractStorageManager {
                 String channelId = resultSet.getString("channelid");
                 String favicon = resultSet.getString("favicon");
 
-                ServerRecord serverRecord = new ServerRecord(guildId, serverName, serverAddress, serverPort, active, messageID, channelId, favicon);
-                activeServers.add(serverRecord);
+                ServerDataRecord serverDataRecord = new ServerDataRecord(guildId, serverName, serverAddress, serverPort, active, messageID, channelId, favicon);
+                activeServers.add(serverDataRecord);
             }
 
             resultSet.close();
@@ -346,5 +356,122 @@ public class MySQLStorageManager extends AbstractStorageManager {
             e.printStackTrace();
         }
         return uniqueGuildCount;
+    }
+
+    @Override
+    public void addPlayerList(String guildId, String serverName, String messageId, String channelId, boolean active) {
+        try {
+            // Insert the player list information
+            PreparedStatement insertStatement = connection.prepareStatement(
+                    "INSERT INTO playerlist (guildid, servername, messageid, channelid, active) VALUES (?, ?, ?, ?, ?)"
+            );
+            insertStatement.setString(1, guildId);
+            insertStatement.setString(2, serverName);
+            insertStatement.setString(3, messageId);
+            insertStatement.setString(4, channelId);
+            insertStatement.setBoolean(5, active);
+
+            insertStatement.executeUpdate();
+            insertStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void setPlayerListStatus(String guildId, String serverName, boolean active) {
+        try {
+            PreparedStatement updateStatement = connection.prepareStatement(
+                    "UPDATE playerlist SET active = ? WHERE guildid = ? AND servername = ?"
+            );
+            updateStatement.setBoolean(1, active);
+            updateStatement.setString(2, guildId);
+            updateStatement.setString(3, serverName);
+
+            updateStatement.executeUpdate();
+            updateStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean removePlayerList(String guildId, String serverName) {
+        try {
+            PreparedStatement deleteStatement = connection.prepareStatement(
+                    "DELETE FROM playerlist WHERE guildid = ? AND servername = ?"
+            );
+            deleteStatement.setString(1, guildId);
+            deleteStatement.setString(2, serverName);
+
+            int rowsAffected = deleteStatement.executeUpdate();
+            deleteStatement.close();
+
+            // If rowsAffected is greater than 0, the deletion was successful
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Return false if an exception occurs
+    }
+
+    @Override
+    public PlayerListDataRecord getPlayerListDataByServerName(String guildId, String serverName) {
+        PlayerListDataRecord playerListDataRecord = null;
+        try {
+            PreparedStatement selectStatement = connection.prepareStatement(
+                    "SELECT guildid, servername, messageid, channelid, active FROM playerlist WHERE servername = ? AND guildid = ?"
+            );
+            selectStatement.setString(1, serverName);
+            selectStatement.setString(2, guildId);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String retrievedGuildId = resultSet.getString("guildid");
+                String retrievedServerName = resultSet.getString("servername");
+                String messageId = resultSet.getString("messageid");
+                String channelId = resultSet.getString("channelid");
+                boolean active = resultSet.getBoolean("active");
+
+                playerListDataRecord = new PlayerListDataRecord(retrievedGuildId, retrievedServerName, messageId, channelId, active);
+            }
+
+            resultSet.close();
+            selectStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return playerListDataRecord;
+    }
+
+    @Override
+    public List<PlayerListDataRecord> getAllActivePlayers() {
+        List<PlayerListDataRecord> activePlayers = new ArrayList<>();
+
+        try {
+            PreparedStatement selectStatement = connection.prepareStatement(
+                    "SELECT guildid, servername, messageid, channelid, active FROM playerlist WHERE active = ?"
+            );
+            selectStatement.setBoolean(1, true);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            while (resultSet.next()) {
+                String guildId = resultSet.getString("guildid");
+                String serverName = resultSet.getString("servername");
+                String messageId = resultSet.getString("messageid");
+                String channelId = resultSet.getString("channelid");
+                boolean active = resultSet.getBoolean("active");
+
+                PlayerListDataRecord playerDataRecord = new PlayerListDataRecord(guildId, serverName, messageId, channelId, active);
+                activePlayers.add(playerDataRecord);
+            }
+
+            resultSet.close();
+            selectStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return activePlayers;
     }
 }

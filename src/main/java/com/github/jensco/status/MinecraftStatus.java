@@ -4,13 +4,15 @@ import br.com.azalim.mcserverping.MCPing;
 import br.com.azalim.mcserverping.MCPingOptions;
 import br.com.azalim.mcserverping.MCPingResponse;
 import br.com.azalim.mcserverping.MCPingUtil;
+import com.github.jensco.records.StatusRecord;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockPong;
-import com.github.jensco.records.StatusRecord;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +40,7 @@ public class MinecraftStatus {
         int currentOnline = 0;
         long latency = 0;
         int openSlots = 0;
+        List<String> playerNames = new ArrayList<>();
 
         try {
             MCPingResponse javaData = javaDataFuture.get();
@@ -48,6 +51,14 @@ public class MinecraftStatus {
                 currentOnline = javaData.getPlayers().getOnline();
                 latency = javaData.getPing();
                 javaOnline = true;
+
+                if (!(javaData.getPlayers().getSample() == null)) {
+                    for (MCPingResponse.Player player : javaData.getPlayers().getSample()) {
+                        playerNames.add(player.getName());
+                    }
+                } else {
+                    playerNames = null;
+                }
             }
 
             BedrockPong bedrockData = bedrockDataFuture.get();
@@ -64,7 +75,7 @@ public class MinecraftStatus {
            return null;
         }
 
-        return new StatusRecord(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots);
+        return new StatusRecord(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots, playerNames);
     }
 
     @Nullable

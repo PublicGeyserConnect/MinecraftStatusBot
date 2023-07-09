@@ -1,17 +1,15 @@
 package com.github.jensco.status;
 
-import br.com.azalim.mcserverping.MCPingResponse;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
-import java.util.List;
 
 public class MinecraftStatusEmbedBuilder {
 
     @NotNull
-    public static MessageEmbed statusEmbed(String ip, MinecraftStatus data, String favicon) {
+    public static MessageEmbed statusEmbed(String ip, @NotNull MinecraftStatus data, String favicon) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         boolean isOnline = data.getServerInfo().serverStatus();

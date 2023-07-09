@@ -53,19 +53,23 @@ public class ServerCommand extends SlashCommand {
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
             String serverName = event.optString("alias");
+            InteractionHook interactionHook = event.deferReply().complete();
 
             try {
                 boolean isRemoved = Bot.storageManager.removeServer(Objects.requireNonNull(event.getGuild()).getId(), serverName);
+                String playerlist = "No playerList was deleted.";
                 if (isRemoved) {
-                    event.replyEmbeds(MessageHelper.handleCommand("Server: **" + serverName + "** was removed from the database.", "Server Settings")).queue();
+                    if (Bot.storageManager.removePlayerList(event.getGuild().getId(), serverName)) {
+                        playerlist = "Removing your playerlist";
+                    }
+                    interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server: **" + serverName + "** was removed from the database. " + playerlist, "Server Settings")).queue();
+
                 } else {
-                    event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings", "Could not find a server named: **" + serverName + "**"))).queue();
+                    interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Server Settings", "Could not find a server named: **" + serverName + "**")).queue();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings", "Server was not removed. " + e.getMessage()))).queue();
-            } finally {
-                Bot.storageManager.closeStorage();
+                interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Server Settings", "Server was not removed. " + e.getMessage())).queue();
             }
         }
     }
@@ -110,20 +114,24 @@ public class ServerCommand extends SlashCommand {
         protected void execute(@NotNull SlashCommandEvent event) {
             String guildId = Objects.requireNonNull(event.getGuild()).getId();
 
+            InteractionHook interactionHook = event.deferReply().complete();
+
             // Get all server names for the guild from the database
             List<String> serverNames = Bot.storageManager.getAllServerNamesByGuildId(guildId);
 
-            if (serverNames.isEmpty()) {
-                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings", "No servers found."))).queue();
-            } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Server list:\n");
-                for (String serverName : serverNames) {
-                    sb.append("- ").append(serverName).append("\n");
-                }
-                event.replyEmbeds(MessageHelper.handleCommand(sb.toString(), "Server Settings")).queue();
+            if (serverNames == null || serverNames.isEmpty()) {
+                interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Server Settings", "No servers found.")).queue();
+                return;
             }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Server list:\n");
+            for (String serverName : serverNames) {
+                sb.append("- ").append(serverName).append("\n");
+            }
+            interactionHook.editOriginalEmbeds(MessageHelper.handleCommand(sb.toString(), "Server Settings")).queue();
         }
+
     }
 
     public static class SetServerImageSubCommand extends SlashCommand {
@@ -143,21 +151,20 @@ public class ServerCommand extends SlashCommand {
         protected void execute(@NotNull SlashCommandEvent event) {
             String serverName = event.optString("alias");
             String imageUrl = event.optString("url");
+            InteractionHook interactionHook = event.deferReply().complete();
 
             Checks.notNull(event.getGuild(), "server");
             if (Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId()) == null) {
-                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings", "The server that you tried to edit was not found."))).queue();
+                interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Server Settings", "The server that you tried to edit was not found.")).queue();
                 return;
             }
 
             try {
                 Bot.storageManager.updateServerFavicon(event.getGuild().getId(), serverName, imageUrl);
-                event.replyEmbeds(MessageHelper.handleCommand("Server image URL has been updated you will have to wait till next refresh for the image to update.", "Server Settings")).queue();
+                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server image URL has been updated you will have to wait till next refresh for the image to update.", "Server Settings")).queue();
             } catch (Exception e) {
-                event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings",  "Failed to update server image URL. " + e.getMessage()))).queue();
+                interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Server Settings",  "Failed to update server image URL. " + e.getMessage())).queue();
                 e.printStackTrace();
-            } finally {
-                Bot.storageManager.closeStorage();
             }
         }
     }
@@ -171,35 +178,35 @@ public class ServerCommand extends SlashCommand {
 
         // port cant be bigger then 65535
         if (serverPort > 65534) {
-           return Objects.requireNonNull(MessageHelper.errorResponse(null, "Server Settings", "Port number that you provided is invalid or to high"));
+           return MessageHelper.errorResponse(null, "Server Settings", "Port number that you provided is invalid or to high");
         }
 
         // Create a ServerPing instance and ping the server
         MinecraftStatus data = new MinecraftStatus(serverAddress, serverPort);
 
         if (data.getServerInfo() == null) {
-            return Objects.requireNonNull(MessageHelper.errorResponse(null, "Server Settings", "The ip you provided is invalid"));
+            return MessageHelper.errorResponse(null, "Server Settings", "The ip you provided is invalid");
 
         }
 
         if (!data.getServerInfo().serverStatus()) {
-            return Objects.requireNonNull(MessageHelper.errorResponse(null, "Server Settings", "Server was not reachable."));
+            return MessageHelper.errorResponse(null, "Server Settings", "Server was not reachable.");
         }
         // people only allowed to have 5 servers at a time
         List<String> serverNames = Bot.storageManager.getAllServerNamesByGuildId(event.getGuild().getId());
         if (serverNames.size() >= 5) {
-            return Objects.requireNonNull(MessageHelper.errorResponse(null, "Server Settings", "You can only have a maximum of 5 servers."));
+            return MessageHelper.errorResponse(null, "Server Settings", "You can only have a maximum of 5 servers.");
 
         }
         // do not allow duplicate server names
         if (serverNames.contains(serverName)) {
-            return Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings", "Database already contains this server."));
+            return MessageHelper.errorResponse(null, "Server Settings", "Database already contains this server.");
         }
         // add server to database
         try {
-            Bot.storageManager.addServer(Objects.requireNonNull(event.getGuild()).getId(), serverName, serverAddress, serverPort, favicon);
+            Bot.storageManager.addServer(event.getGuild().getId(), serverName, serverAddress, serverPort, favicon);
         } catch (Exception e) {
-            return Objects.requireNonNull(MessageHelper.errorResponse(event, "Server Settings", "Server was not added in the database. " + e.getMessage()));
+            return MessageHelper.errorResponse(null, "Server Settings", "Server was not added in the database. " + e.getMessage());
         }
 
         return MessageHelper.handleCommand("Server **" + serverName + "** was reachable and has been saved into our database.", "Server Settings");

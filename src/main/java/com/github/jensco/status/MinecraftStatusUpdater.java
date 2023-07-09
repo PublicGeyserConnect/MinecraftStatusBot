@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import com.github.jensco.records.ServerRecord;
+import com.github.jensco.records.ServerDataRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MinecraftStatusChecker {
+public class MinecraftStatusUpdater {
     private static final int EMBED_UPDATE_DELAY_SECONDS = 1;
     private final Map<String, Integer> offlineCountMap = new HashMap<>();
 
@@ -30,23 +30,23 @@ public class MinecraftStatusChecker {
     }
 
     public void retrieveMessages() {
-        List<ServerRecord> serverRecordList = Bot.storageManager.getAllActiveServers();
+        List<ServerDataRecord> serverDataRecordList = Bot.storageManager.getAllActiveServers();
         try (ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor()) {
 
-            for (int i = 0; i < serverRecordList.size(); i++) {
+            for (int i = 0; i < serverDataRecordList.size(); i++) {
                 int finalI = i;
                 scheduler.schedule(() -> {
-                    ServerRecord serverRecord = serverRecordList.get(finalI);
-                    String channelId = serverRecord.channelID();
-                    String messageId = serverRecord.messageID();
+                    ServerDataRecord serverDataRecord = serverDataRecordList.get(finalI);
+                    String channelId = serverDataRecord.channelID();
+                    String messageId = serverDataRecord.messageID();
 
                     TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
                     if (channel != null) {
                         channel.retrieveMessageById(messageId).queue(
-                                message -> updateMessageEmbed(serverRecord, message, channel),
+                                message -> updateMessageEmbed(serverDataRecord, message, channel),
                                 exception -> {
                                     Bot.getLogger().error("Could not locate status embed " + messageId);
-                                    Bot.storageManager.removeServer(serverRecord.guildId(), serverRecord.serverName());
+                                    Bot.storageManager.setServerActiveStatus(serverDataRecord.guildId(), serverDataRecord.serverName(), false);
                                 });
                     }
                 }, i * EMBED_UPDATE_DELAY_SECONDS, TimeUnit.SECONDS);
@@ -56,19 +56,19 @@ public class MinecraftStatusChecker {
         }
     }
 
-    private void updateMessageEmbed(ServerRecord serverRecord, Message message, TextChannel channel) {
+    private void updateMessageEmbed(ServerDataRecord serverDataRecord, Message message, TextChannel channel) {
         if (message != null) {
             try {
-                MinecraftStatus data = new MinecraftStatus(serverRecord.serverAddress(), serverRecord.serverPort());
-                MessageEmbed updatedEmbed = MinecraftStatusEmbedBuilder.statusEmbed(serverRecord.serverAddress(), data, serverRecord.favicon());
+                MinecraftStatus data = new MinecraftStatus(serverDataRecord.serverAddress(), serverDataRecord.serverPort());
+                MessageEmbed updatedEmbed = MinecraftStatusEmbedBuilder.statusEmbed(serverDataRecord.serverAddress(), data, serverDataRecord.favicon());
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
                             if (!data.getServerInfo().serverStatus()) {
-                                NotificationRecord notifyRole = Bot.storageManager.getNotifiedDataByGuildId(serverRecord.guildId());
+                                NotificationRecord notifyRole = Bot.storageManager.getNotifiedDataByGuildId(serverDataRecord.guildId());
                                 if (!(notifyRole == null) && notifyRole.active()) {
-                                    serverOfflineWarningMessage(channel, serverRecord, notifyRole.role());
+                                    serverOfflineWarningMessage(channel, serverDataRecord, notifyRole.role());
                                 }
-                            } else offlineCountMap.remove(serverRecord.serverName());
+                            } else offlineCountMap.remove(serverDataRecord.serverName());
                         },
                         exception -> Bot.getLogger().error("Failed to update message with ID " + message.getId())
                 );
@@ -78,7 +78,7 @@ public class MinecraftStatusChecker {
         }
     }
 
-    private void serverOfflineWarningMessage(TextChannel channel, @NotNull ServerRecord data, String roleId) {
+    private void serverOfflineWarningMessage(TextChannel channel, @NotNull ServerDataRecord data, String roleId) {
         int offlineCount = offlineCountMap.getOrDefault(data.serverName(), 0); // Get the offline count for the server
         offlineCount++; // Increment the offline count
 
