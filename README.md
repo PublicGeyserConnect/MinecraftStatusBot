@@ -27,7 +27,7 @@ The following commands are available:
 Like just about any other bot, is used to ping a specified server. By default, it'll check for both Java and Bedrock servers on the specified address.
 
 `/server add alias address port`
-This is used to add a server to your Discord's saved server list. You're allowed 5 saved servers
+This is used to add a server to your Discord's saved server list. You're allowed 5 saved servers. All fields are required. 
 - alias: what you want to name the server
 - address: the connection address for the server
 - port: the port for your server (defaults: Java 25565, Bedrock 19132)
