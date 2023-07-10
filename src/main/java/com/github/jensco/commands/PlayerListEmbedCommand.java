@@ -70,15 +70,16 @@ public class PlayerListEmbedCommand extends SlashCommand {
                                         .queue(sendStatus -> {
                                             Bot.storageManager.addPlayerList(
                                                     event.getGuild().getId(), serverName,
-                                                    sentMessage.getId(),
+                                                    sendStatus.getId(),
                                                     event.getChannel().getId(),
                                                     true);
                                             sentMessage.delete().queue();
                                         });
                             });
+                    return;
                 }
+                System.out.println(playerListInfo);
 
-                assert playerListInfo != null;
                 if (playerListInfo.active()) {
                     interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "PlayerList Embed Settings", "The Playerlist is already enabled."))
                             .queue();

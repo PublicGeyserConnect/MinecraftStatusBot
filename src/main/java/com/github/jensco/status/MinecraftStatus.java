@@ -54,7 +54,9 @@ public class MinecraftStatus {
 
                 if (!(javaData.getPlayers().getSample() == null)) {
                     for (MCPingResponse.Player player : javaData.getPlayers().getSample()) {
-                        playerNames.add(player.getName());
+                        if (!player.getName().equals("Anonymous Player")) {
+                            playerNames.add(player.getName());
+                        }
                     }
                 } else {
                     playerNames = null;
