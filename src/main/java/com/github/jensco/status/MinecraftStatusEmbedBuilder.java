@@ -1,5 +1,6 @@
 package com.github.jensco.status;
 
+import com.github.jensco.records.ServerDataRecord;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
@@ -9,21 +10,21 @@ import java.time.Instant;
 public class MinecraftStatusEmbedBuilder {
 
     @NotNull
-    public static MessageEmbed statusEmbed(String ip, @NotNull MinecraftStatus data, String favicon) {
+    public static MessageEmbed statusEmbed(ServerDataRecord serverData, @NotNull MinecraftStatus statusData) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        boolean isOnline = data.getServerInfo().serverStatus();
-        String motd = data.getServerInfo().motd();
-        long latency = data.getServerInfo().latency();
-        String version = data.getServerInfo().version();
-        int maxPlayers = data.getServerInfo().maxPlayers();
-        int currentPlayers = data.getServerInfo().currentOnline();
-        int openSlots = data.getServerInfo().openSlots();
+        boolean isOnline = statusData.getServerInfo().serverStatus();
+        String motd = statusData.getServerInfo().motd();
+        long latency = statusData.getServerInfo().latency();
+        String version = statusData.getServerInfo().version();
+        int maxPlayers = statusData.getServerInfo().maxPlayers();
+        int currentPlayers = statusData.getServerInfo().currentOnline();
+        int openSlots = statusData.getServerInfo().openSlots();
 
         long unixTimestamp = Instant.now().getEpochSecond();
         String discordTime = "<t:"+ unixTimestamp +":R>";
 
-        embedBuilder.setTitle("Status for " + ip)
+        embedBuilder.setTitle("Status for " + serverData.serverName() + "\n(" + serverData.serverAddress() + ")")
                 .setColor(0x00FF00)
                 .addField("Server is", isOnline ? ":green_circle: Online" : ":red_circle: Offline", false)
                 .addField("MOTD", motd != null ? motd : "Unable to retrieve server information", true)
@@ -33,7 +34,7 @@ public class MinecraftStatusEmbedBuilder {
                 .addField("Latency", latency > 0 ? latency + " ms" : "Unavailable", true)
                 .addField("Open Slots", String.valueOf(openSlots), true)
                 .addField("Last Status Update", discordTime, true)
-                .setThumbnail(favicon);
+                .setThumbnail(serverData.favicon());
 
         return embedBuilder.build();
     }

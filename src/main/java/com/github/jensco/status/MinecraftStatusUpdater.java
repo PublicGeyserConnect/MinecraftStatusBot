@@ -56,19 +56,19 @@ public class MinecraftStatusUpdater {
         }
     }
 
-    private void updateMessageEmbed(ServerDataRecord serverDataRecord, Message message, TextChannel channel) {
+    private void updateMessageEmbed(ServerDataRecord serverData, Message message, TextChannel channel) {
         if (message != null) {
             try {
-                MinecraftStatus data = new MinecraftStatus(serverDataRecord.serverAddress(), serverDataRecord.serverPort());
-                MessageEmbed updatedEmbed = MinecraftStatusEmbedBuilder.statusEmbed(serverDataRecord.serverAddress(), data, serverDataRecord.favicon());
+                MinecraftStatus statusData = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort());
+                MessageEmbed updatedEmbed = MinecraftStatusEmbedBuilder.statusEmbed(serverData, statusData);
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
-                            if (!data.getServerInfo().serverStatus()) {
-                                NotificationRecord notifyRole = Bot.storageManager.getNotifiedDataByGuildId(serverDataRecord.guildId());
+                            if (!statusData.getServerInfo().serverStatus()) {
+                                NotificationRecord notifyRole = Bot.storageManager.getNotifiedDataByGuildId(serverData.guildId());
                                 if (!(notifyRole == null) && notifyRole.active()) {
-                                    serverOfflineWarningMessage(channel, serverDataRecord, notifyRole.role());
+                                    serverOfflineWarningMessage(channel, serverData, notifyRole.role());
                                 }
-                            } else offlineCountMap.remove(serverDataRecord.serverName());
+                            } else offlineCountMap.remove(serverData.serverName());
                         },
                         exception -> Bot.getLogger().error("Failed to update message with ID " + message.getId())
                 );
