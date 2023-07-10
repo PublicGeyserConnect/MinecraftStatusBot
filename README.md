@@ -1,23 +1,26 @@
 # MinecraftStatusBot
 
-The is a Discord bot written in Java. The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. 
+The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. 
 
 This bot supports the following:
 - Pinging any address for server information.
 - Saving servers for quick reference.
 - Specifying a custom image for the server imbeds.
-- Displays a regularly updated message embed with the user selected server info.
-- Displays a regularly updated message embed with the list of players on a specified server (if supported by server).
-- Can notify a specified role to alert of a server being offline.
+- Displaying a regularly updated message embed with the user selected server info.
+- Displaying a regularly updated message embed with the list of players on a specified server (if supported by server).
+- Notifying a specified role to alert of a server being offline.
 
+## How to add to your Discord
 If you wish to invite the publicly available bot instance, use the following link:
 
 https://discord.com/api/oauth2/authorize?client_id=1125537355734978561&permissions=1084480288832&scope=bot
 
-There is also a simple support Discord: 
+## Community and support
+We have a community Discord server available at the link:
 
 https://discord.gg/rFWgQxcV
 
+## Configuring and using the bot in your Discord.
 The following commands are available:
 
 `/ping`
@@ -62,5 +65,8 @@ Disables the role notification system.
 `/notify role roleid`
 Specifies the role to ping in the current channel the command is run in.
 
+## Feedback
+Feature requests and bug reports are welcome. On GitHub, you may open an issue, or start a discussion. You may also join our Discord, and make use of our suggestions and bug report channels.
 
-Minimum Java version required to run the software is 17. This bot is inspired from the code of [Doze's MCSS bot](https://github.com/Doze42/MCSS). 
+## Software Info
+This is a Discord bot written in Java, and the minimum Java version required to run the software is 17. This bot is inspired from the code of [Doze's MCSS bot](https://github.com/Doze42/MCSS).
