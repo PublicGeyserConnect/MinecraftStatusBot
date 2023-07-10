@@ -2,6 +2,14 @@
 
 The is a Discord bot written in Java. Minimum Java version required to run the software is 17. This bot is inspired from the code of [Doze's MCSS bot](https://github.com/Doze42/MCSS). The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. Users can use the bot to ping any server of their choice, and the admins can use the bot to display the current status of the servers they choose. The bot can even show a regularly updated embed in a specific channel. For the game server admins, the bot can be configured to ping a specific role after two consecutive failed pings (this was chosen to reduce false pings just because a ping request got dropped).
 
+This bot supports the following:
+- Pinging any address for server information.
+- Saving servers for quick reference.
+- Specifying a custom image for the server imbeds.
+- Displays a regularly updated message embed with the user selected server info.
+- Displays a regularly updated message embed with the list of players on a specified server (if supported by server).
+- Can notify a specified role to alert of a server being offline.
+
 If you wish to invite the publicly available bot instance, use the following link:
 
 https://discord.com/api/oauth2/authorize?client_id=1125537355734978561&permissions=1084480288832&scope=bot
