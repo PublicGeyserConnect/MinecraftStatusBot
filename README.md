@@ -1,9 +1,9 @@
 # MinecraftStatusBot
 
-The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. 
+The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. It supports both Bedrock and Java edition servers.
 
-This bot supports the following:
-- Pinging any address for server information.
+This bot supports the following features:
+- Pinging any address for server information. (Automatically checks for both Java and Bedrock on the given address.)
 - Saving servers for quick reference.
 - Specifying a custom image for the server imbeds.
 - Displaying a regularly updated message embed with the user selected server info.
@@ -32,12 +32,13 @@ This is used to add a server to your Discord's saved server list. You're allowed
 - address: the connection address for the server
 - port: the port for your server
 
-`/server image alias url`
-This allows an image URL to be specified for the server.
 
 `/server remove alias`
 Used to remove a server from the saved servers list.
 - alias: the name used to save the server.
+
+`/server image alias url`
+This allows an image URL to be specified for the server.
 
 `/server list`
 Lists all of the servers that have been saved to the Discord.
@@ -49,12 +50,10 @@ Enables the automatically updating embed in the channel the command is executed 
 Disables the automatically updating embed.
 
 `/playerlist enable alias`
-Enables an auto-updating embed showing the players on the specified server. This only works on by default on 1.19x or older servers, or 1.20 or newer servers that has the "hide-online-players" set to false. Some servers also use plugins to hide the players list. The bot will return a message if the server doesn't reveal its player list, and will not enable the embed.
+Enables an auto-updating embed showing the players on the specified server. The bot will return a message if the server doesn't reveal its player list, and will not enable the embed.
 
 `/playerlist disable alias`
 Disables the specified embed.
-
-We also support notifying a specific role if a server is offline for 2 consecutive checks.
 
 `/notify enable`
 Enables the role notification system.
@@ -64,6 +63,11 @@ Disables the role notification system.
 
 `/notify role roleid`
 Specifies the role to ping in the current channel the command is run in.
+
+## Limitations
+- Bedrock servers do not reveal a player list, so the player list feature is not supported on them.
+- The player list only works on by default on 1.19.x or older servers, or 1.20 or newer servers that have the "hide-online-players" set to false. Some servers also use plugins to hide the players list.
+- We wait for two consecutive "server offline" pings before notfying the role that the server is offline to minimize false notifications. Unfortunately, false notifications do still happen.
 
 ## Feedback
 Feature requests and bug reports are welcome. On GitHub, you may open an issue, or start a discussion. You may also join our Discord, and make use of our suggestions and bug report channels.
