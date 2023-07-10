@@ -21,6 +21,9 @@ This is used to add a server to your Discord's saved server list. You're allowed
 - address: the connection address for the server
 - port: the port for your server
 
+`/server image alias url`
+This allows an image URL to be specified for the server.
+
 `/server remove alias`
 Used to remove a server from the saved servers list.
 - alias: the name used to save the server.
@@ -33,6 +36,12 @@ Enables the automatically updating embed in the channel the command is executed 
 
 `/status disable alias`
 Disables the automatically updating embed.
+
+`/playerlist enable alias`
+Enables an auto-updating embed showing the players on the specified server. This only works on by default on 1.19x or older servers, or 1.20 or newer servers that has the "hide-online-players" set to false. Some servers also use plugins to hide the players list. The bot will return a message if the server doesn't reveal its player list, and will not enable the embed.
+
+`/playerlist disable alias`
+Disables the specified embed.
 
 We also support notifying a specific role if a server is offline for 2 consecutive checks.
 
