@@ -30,7 +30,7 @@ Like just about any other bot, is used to ping a specified server. By default, i
 This is used to add a server to your Discord's saved server list. You're allowed 5 saved servers
 - alias: what you want to name the server
 - address: the connection address for the server
-- port: the port for your server
+- port: the port for your server (defaults: Java 25565, Bedrock 19132)
 
 
 `/server remove alias`
