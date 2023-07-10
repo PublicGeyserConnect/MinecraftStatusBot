@@ -66,7 +66,7 @@ Specifies the role to ping in the current channel the command is run in.
 
 ## Limitations
 - Bedrock servers do not reveal a player list, so the player list feature is not supported on them.
-- The player list only works on by default on 1.19.x or older servers, or 1.20 or newer servers that have the "hide-online-players" set to false. Some servers also use plugins to hide the players list.
+- The player list only works by default on 1.19.x or older servers, or 1.20 or newer servers that have the "hide-online-players" set to false. Some servers also use plugins to hide the players list.
 - We wait for two consecutive "server offline" pings before notfying the role that the server is offline to minimize false notifications. Unfortunately, false notifications do still happen.
 
 ## Feedback
