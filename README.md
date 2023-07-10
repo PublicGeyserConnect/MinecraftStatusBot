@@ -1,6 +1,6 @@
 # MinecraftStatusBot
 
-The is a Discord bot written in Java. Minimum Java version required to run the software is 17. This bot is inspired from the code of [Doze's MCSS bot](https://github.com/Doze42/MCSS). The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. Users can use the bot to ping any server of their choice, and the admins can use the bot to display the current status of the servers they choose. The bot can even show a regularly updated embed in a specific channel. For the game server admins, the bot can be configured to ping a specific role after two consecutive failed pings (this was chosen to reduce false pings just because a ping request got dropped).
+The is a Discord bot written in Java. The purpose of this bot is to provide a means within Discord to allow visibility of a Minecraft server status to users. 
 
 This bot supports the following:
 - Pinging any address for server information.
@@ -61,3 +61,6 @@ Disables the role notification system.
 
 `/notify role roleid`
 Specifies the role to ping in the current channel the command is run in.
+
+
+Minimum Java version required to run the software is 17. This bot is inspired from the code of [Doze's MCSS bot](https://github.com/Doze42/MCSS). 
