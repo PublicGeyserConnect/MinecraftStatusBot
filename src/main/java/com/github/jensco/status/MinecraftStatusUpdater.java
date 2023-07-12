@@ -2,11 +2,11 @@ package com.github.jensco.status;
 
 import com.github.jensco.Bot;
 import com.github.jensco.records.NotificationRecord;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import com.github.jensco.records.ServerDataRecord;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import com.github.jensco.records.ServerDataRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -16,43 +16,37 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.jensco.Bot.LOGGER;
+
 public class MinecraftStatusUpdater {
-    private static final int EMBED_UPDATE_DELAY_SECONDS = 1;
+    private final ScheduledExecutorService executorService;
     private final Map<String, Integer> offlineCountMap = new HashMap<>();
 
+    public MinecraftStatusUpdater() {
+        executorService = Executors.newSingleThreadScheduledExecutor(); // Use a single-threaded executor
+    }
+
     public void startUpdateLoop() {
-        try {
-            ScheduledExecutorService executor = Bot.getGeneralThreadPool();
-            executor.scheduleAtFixedRate(this::retrieveMessages, 0, 5, TimeUnit.MINUTES);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        executorService.scheduleWithFixedDelay(this::retrieveMessages, 0, 5, TimeUnit.MINUTES);
     }
 
     public void retrieveMessages() {
         List<ServerDataRecord> serverDataRecordList = Bot.storageManager.getAllActiveServers();
-        try (ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor()) {
 
-            for (int i = 0; i < serverDataRecordList.size(); i++) {
-                int finalI = i;
-                scheduler.schedule(() -> {
-                    ServerDataRecord serverDataRecord = serverDataRecordList.get(finalI);
-                    String channelId = serverDataRecord.channelID();
-                    String messageId = serverDataRecord.messageID();
+        for (ServerDataRecord serverDataRecord : serverDataRecordList) {
+            String channelId = serverDataRecord.channelID();
+            String messageId = serverDataRecord.messageID();
 
-                    TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
-                    if (channel != null) {
-                        channel.retrieveMessageById(messageId).queue(
-                                message -> updateMessageEmbed(serverDataRecord, message, channel),
-                                exception -> {
-                                    Bot.getLogger().error("Could not locate status embed " + messageId);
-                                    Bot.storageManager.setServerActiveStatus(serverDataRecord.guildId(), serverDataRecord.serverName(), false);
-                                });
-                    }
-                }, i * EMBED_UPDATE_DELAY_SECONDS, TimeUnit.SECONDS);
+            TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
+            if (channel != null) {
+                channel.retrieveMessageById(messageId).queue(
+                        message -> updateMessageEmbed(serverDataRecord, message, channel),
+                        exception -> {
+                            if (Bot.storageManager.deactivateServerByMessageId(serverDataRecord.guildId(), messageId)) {
+                                LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
+                            }
+                        });
             }
-
-            scheduler.shutdown();
         }
     }
 
@@ -64,16 +58,18 @@ public class MinecraftStatusUpdater {
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
                             if (!statusData.getServerInfo().serverStatus()) {
-                                NotificationRecord notifyRole = Bot.storageManager.getNotifiedDataByGuildId(serverData.guildId());
-                                if (!(notifyRole == null) && notifyRole.active()) {
+                                NotificationRecord notifyRole = Bot.storageManager.getNotifiedData(serverData.guildId());
+                                if (notifyRole != null && notifyRole.active()) {
                                     serverOfflineWarningMessage(channel, serverData, notifyRole.role());
                                 }
-                            } else offlineCountMap.remove(serverData.serverName());
+                            } else {
+                                offlineCountMap.remove(serverData.serverName());
+                            }
                         },
-                        exception -> Bot.getLogger().error("Failed to update message with ID " + message.getId())
+                        exception -> LOGGER.info("Failed to update message with ID " + message.getId())
                 );
             } catch (Exception e) {
-                Bot.getLogger().error("Failed to update message with ID " + message.getId());
+                LOGGER.info("Failed to update message with ID " + message.getId());
             }
         }
     }
@@ -84,11 +80,11 @@ public class MinecraftStatusUpdater {
 
         if (offlineCount == 2) { // Check if the server has been offline for 2 consecutive loops
             Role role = channel.getGuild().getRoleById(roleId);
-            if (role == null) {
+            if (role != null) {
+                channel.sendMessage(role.getAsMention() + ", Server **" + data.serverName() + "** is offline for 2 consecutive loops!").queue();
+            } else {
                 channel.sendMessage("The provided role does not exist").queue();
-                return;
             }
-            channel.sendMessage(role.getAsMention() + ", Server **" + data.serverName() + "** is offline for 2 consecutive loops!").queue();
         }
         offlineCountMap.put(data.serverName(), offlineCount); // Update the offline count for the server
     }

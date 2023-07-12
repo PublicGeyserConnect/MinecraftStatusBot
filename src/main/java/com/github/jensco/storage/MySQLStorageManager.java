@@ -1,8 +1,8 @@
 package com.github.jensco.storage;
 
+import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.records.PlayerListDataRecord;
 import com.github.jensco.records.ServerDataRecord;
-import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.util.PropertiesManager;
 
 import java.sql.*;
@@ -124,7 +124,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
 
 
     @Override
-    public ServerDataRecord getServerInfoByServerName(String serverName, String guildId) {
+    public ServerDataRecord getServerInfo(String serverName, String guildId) {
         ServerDataRecord serverDataRecord = null;
         try {
             PreparedStatement selectStatement = connection.prepareStatement(
@@ -290,7 +290,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public NotificationRecord getNotifiedDataByGuildId(String guildId) {
+    public NotificationRecord getNotifiedData(String guildId) {
         NotificationRecord notifiedData = null;
 
         try {
@@ -379,23 +379,6 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public void setPlayerListStatus(String guildId, String serverName, boolean active) {
-        try {
-            PreparedStatement updateStatement = connection.prepareStatement(
-                    "UPDATE playerlist SET active = ? WHERE guildid = ? AND servername = ?"
-            );
-            updateStatement.setBoolean(1, active);
-            updateStatement.setString(2, guildId);
-            updateStatement.setString(3, serverName);
-
-            updateStatement.executeUpdate();
-            updateStatement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
     public boolean removePlayerList(String guildId, String serverName) {
         try {
             PreparedStatement deleteStatement = connection.prepareStatement(
@@ -416,7 +399,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public PlayerListDataRecord getPlayerListDataByServerName(String guildId, String serverName) {
+    public PlayerListDataRecord getPlayerListData(String guildId, String serverName) {
         PlayerListDataRecord playerListDataRecord = null;
         try {
             PreparedStatement selectStatement = connection.prepareStatement(
@@ -473,5 +456,44 @@ public class MySQLStorageManager extends AbstractStorageManager {
         }
 
         return activePlayers;
+    }
+
+    @Override
+    public boolean removePlayerListByMessageId(String guildId, String messageId) {
+        try {
+            PreparedStatement deleteStatement = connection.prepareStatement(
+                    "DELETE FROM playerlist WHERE guildid = ? AND messageid = ?"
+            );
+            deleteStatement.setString(1, guildId);
+            deleteStatement.setString(2, messageId);
+
+            int rowsAffected = deleteStatement.executeUpdate();
+            deleteStatement.close();
+
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean deactivateServerByMessageId(String guildId, String messageId) {
+        try {
+            PreparedStatement updateStatement = connection.prepareStatement(
+                    "UPDATE servers SET active = ? WHERE guildid = ? AND messageid = ?"
+            );
+            updateStatement.setBoolean(1, false);
+            updateStatement.setString(2, guildId);
+            updateStatement.setString(3, messageId);
+
+            int rowsAffected = updateStatement.executeUpdate();
+            updateStatement.close();
+
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

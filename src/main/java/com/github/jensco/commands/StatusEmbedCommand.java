@@ -51,7 +51,7 @@ public class StatusEmbedCommand extends SlashCommand {
             String serverName = event.optString("alias");
 
             event.deferReply().queue(interactionHook -> {
-                ServerDataRecord info = Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId());
+                ServerDataRecord info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
                 if (info == null) {
                     interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "The server you tried to enable was not found."))
@@ -66,7 +66,7 @@ public class StatusEmbedCommand extends SlashCommand {
                 }
 
                 interactionHook.editOriginalEmbeds(
-                                MessageHelper.handleCommand("Server status embed is being activated", "Status Embed Settings"))
+                                MessageHelper.handleCommand("Server status embed is being activated, this can take a few seconds. Message will delete itself.", "Status Embed Settings"))
                         .queueAfter(1, TimeUnit.SECONDS, sentMessage -> {
                             Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId()))
                                     .sendMessageEmbeds(handle(info))
@@ -102,7 +102,7 @@ public class StatusEmbedCommand extends SlashCommand {
                 String serverName = event.optString("alias");
                 Checks.notNull(event.getGuild(), "server");
                 event.deferReply().queue(interactionHook -> {
-                    ServerDataRecord info = Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId());
+                    ServerDataRecord info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
                     if (info == null) {
                         interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "The server you are looking for was not found in our database")).queue();

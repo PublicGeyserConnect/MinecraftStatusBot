@@ -51,8 +51,8 @@ public class PlayerListEmbedCommand extends SlashCommand {
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
             String serverName = event.optString("alias");
-            PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListDataByServerName(event.getGuild().getId(), serverName);
-            ServerDataRecord serverInfo = Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId());
+            PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListData(event.getGuild().getId(), serverName);
+            ServerDataRecord serverInfo = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
             event.deferReply().queue(interactionHook -> {
                 if (serverInfo == null) {
@@ -63,7 +63,7 @@ public class PlayerListEmbedCommand extends SlashCommand {
 
                 if (playerListInfo == null) {
                     interactionHook.editOriginalEmbeds(
-                                    MessageHelper.handleCommand("PlayerList embed is being activated", "PlayerList Embed Settings"))
+                                    MessageHelper.handleCommand("PlayerList embed is being activated, this can take a few seconds. this message will auto delete itself.", "PlayerList Embed Settings"))
                             .queueAfter(1, TimeUnit.SECONDS, sentMessage -> {
                                 Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId()))
                                         .sendMessageEmbeds(handle(serverInfo))
@@ -78,7 +78,6 @@ public class PlayerListEmbedCommand extends SlashCommand {
                             });
                     return;
                 }
-                System.out.println(playerListInfo);
 
                 if (playerListInfo.active()) {
                     interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "PlayerList Embed Settings", "The Playerlist is already enabled."))
@@ -116,16 +115,16 @@ public class PlayerListEmbedCommand extends SlashCommand {
             String serverName = event.optString("alias");
 
             event.deferReply().queue(interactionHook -> {
-                PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListDataByServerName(event.getGuild().getId(), serverName);
+                PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListData(event.getGuild().getId(), serverName);
 
                 if (playerListInfo == null) {
-                    interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "The server you are looking for was not found in our database"))
+                    interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "PlayerList Embed Settings", "The PlayerList embed you are looking for was not found in our database"))
                             .queue();
                     return;
                 }
 
                 if (!playerListInfo.active()) {
-                    interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "Server embed was already disabled"))
+                    interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "PlayerList Embed Settings", "PlayerList embed was already disabled"))
                             .queue();
                     return;
                 }
@@ -135,7 +134,7 @@ public class PlayerListEmbedCommand extends SlashCommand {
                         .retrieveMessageById(playerListInfo.messageID())
                         .queue(message -> {
                             message.delete().queue(deletedMessage -> {
-                                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server embed **" + serverName + "** is disabled.", "Status Embed Settings"))
+                                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("PlayerList embed **" + serverName + "** is disabled.", "PlayerList Embed Settings"))
                                         .queue();
                                 Bot.storageManager.removePlayerList(playerListInfo.guildID(), playerListInfo.serverName());
                             });

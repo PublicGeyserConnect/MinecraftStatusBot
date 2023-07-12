@@ -154,7 +154,7 @@ public class ServerCommand extends SlashCommand {
             InteractionHook interactionHook = event.deferReply().complete();
 
             Checks.notNull(event.getGuild(), "server");
-            if (Bot.storageManager.getServerInfoByServerName(serverName, event.getGuild().getId()) == null) {
+            if (Bot.storageManager.getServerInfo(serverName, event.getGuild().getId()) == null) {
                 interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Server Settings", "The server that you tried to edit was not found.")).queue();
                 return;
             }

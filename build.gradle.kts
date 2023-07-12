@@ -21,8 +21,9 @@ dependencies {
     implementation("net.dv8tion:JDA:5.0.0-beta.10")
     implementation("pw.chew:jda-chewtils:2.0-SNAPSHOT")
 
+    implementation("ch.qos.logback", "logback-classic", "1.2.10")
+
     // Web requests and json
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("org.json:json:20230227")
 
     implementation("org.reflections:reflections:0.10.2")
@@ -30,8 +31,6 @@ dependencies {
     // Database implementations
     implementation("com.mysql:mysql-connector-j:8.0.33")
     implementation("org.xerial:sqlite-jdbc:3.41.2.1")
-
-    implementation("io.sentry:sentry-logback:6.18.1")
 
     // Pinging java and bedrock servers
     implementation("com.github.rtm516:minecraft-server-ping:c61c496104")

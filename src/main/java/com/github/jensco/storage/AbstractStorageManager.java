@@ -24,7 +24,7 @@ public abstract class AbstractStorageManager {
 
     public abstract List<String> getAllServerNamesByGuildId(String guildId);
 
-    public abstract ServerDataRecord getServerInfoByServerName(String serverName, String guildId);
+    public abstract ServerDataRecord getServerInfo(String serverName, String guildId);
 
     public abstract void setServerActiveStatus(String guildId, String serverName, boolean active);
 
@@ -40,7 +40,7 @@ public abstract class AbstractStorageManager {
 
     public abstract void removeNotifyRole(String guildId);
 
-    public abstract NotificationRecord getNotifiedDataByGuildId(String guildId);
+    public abstract NotificationRecord getNotifiedData(String guildId);
 
     public abstract int getActiveServerCount();
 
@@ -48,11 +48,13 @@ public abstract class AbstractStorageManager {
 
     public abstract void addPlayerList(String guildId, String serverName, String messageId, String channelId, boolean active);
 
-    public abstract void setPlayerListStatus(String guildId, String serverName, boolean active);
-
     public abstract boolean removePlayerList(String guildId, String serverName);
 
-    public abstract PlayerListDataRecord getPlayerListDataByServerName(String guildId, String serverName);
+    public abstract PlayerListDataRecord getPlayerListData(String guildId, String serverName);
 
     public abstract List<PlayerListDataRecord> getAllActivePlayers();
+
+    public abstract boolean removePlayerListByMessageId(String guildId, String messageId);
+
+    public abstract boolean deactivateServerByMessageId(String guildId, String messageId);
 }

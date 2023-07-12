@@ -60,7 +60,7 @@ public class NotificationCommand extends SlashCommand {
                 return;
             }
 
-            NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
+            NotificationRecord notify = Bot.storageManager.getNotifiedData(guildId);
             if (notify != null && !notify.role().isEmpty()) {
                 event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings","A role is already assigned to notification: " + notify.role()))).queue();
                 return;
@@ -86,7 +86,7 @@ public class NotificationCommand extends SlashCommand {
             Checks.notNull(event.getGuild(), "server");
             String guildId = event.getGuild().getId();
 
-            NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
+            NotificationRecord notify = Bot.storageManager.getNotifiedData(guildId);
 
             if (notify == null) {
                 event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "You need to add a roleID before you can enable notifications"))).queue();
@@ -113,7 +113,7 @@ public class NotificationCommand extends SlashCommand {
             Checks.notNull(event.getGuild(), "server");
             String guildId = event.getGuild().getId();
 
-            NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
+            NotificationRecord notify = Bot.storageManager.getNotifiedData(guildId);
 
             if (notify != null) {
                 Bot.storageManager.removeNotifyRole(guildId);
@@ -138,7 +138,7 @@ public class NotificationCommand extends SlashCommand {
             Checks.notNull(event.getGuild(), "server");
             String guildId = event.getGuild().getId();
 
-            NotificationRecord notify = Bot.storageManager.getNotifiedDataByGuildId(guildId);
+            NotificationRecord notify = Bot.storageManager.getNotifiedData(guildId);
 
             if (notify == null) {
                 event.replyEmbeds(Objects.requireNonNull(MessageHelper.errorResponse(event, "Notification Settings", "No notification data was found for this server"))).queue();

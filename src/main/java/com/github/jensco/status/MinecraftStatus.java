@@ -44,6 +44,8 @@ public class MinecraftStatus {
 
         try {
             MCPingResponse javaData = javaDataFuture.get();
+            BedrockPong bedrockData = bedrockDataFuture.get();
+
             if (javaData != null) {
                 motd = javaData.getDescription().getStrippedText();
                 version = javaData.getVersion().getName();
@@ -52,17 +54,14 @@ public class MinecraftStatus {
                 latency = javaData.getPing();
                 javaOnline = true;
 
-                if (!(javaData.getPlayers().getSample() == null)) {
+                if (javaData.getPlayers().getSample() != null) {
                     for (MCPingResponse.Player player : javaData.getPlayers().getSample()) {
                         playerNames.add(player.getName());
                     }
                 } else {
                     playerNames = null;
                 }
-            }
-
-            BedrockPong bedrockData = bedrockDataFuture.get();
-            if (bedrockData != null) {
+            } else if (bedrockData != null) {
                 motd = MCPingUtil.stripColors(bedrockData.getMotd());
                 version = bedrockData.getVersion();
                 maxPlayers = bedrockData.getMaximumPlayerCount();
@@ -72,7 +71,7 @@ public class MinecraftStatus {
                 bedrockOnline = true;
             }
         } catch (InterruptedException | ExecutionException ignored) {
-           return null;
+            return null;
         }
 
         return new StatusRecord(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots, playerNames);

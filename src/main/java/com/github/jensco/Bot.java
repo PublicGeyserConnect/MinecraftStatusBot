@@ -1,11 +1,14 @@
 package com.github.jensco;
 
+import com.github.jensco.listeners.ShutdownHandler;
 import com.github.jensco.playerlist.PlayerListUpdater;
+import com.github.jensco.status.MinecraftStatusUpdater;
+import com.github.jensco.storage.AbstractStorageManager;
+import com.github.jensco.storage.StorageType;
 import com.github.jensco.util.PropertiesManager;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import io.sentry.Sentry;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -15,16 +18,11 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
-import com.github.jensco.status.MinecraftStatusUpdater;
-import com.github.jensco.storage.AbstractStorageManager;
-import com.github.jensco.storage.StorageType;
-import com.github.jensco.util.SentryEventManager;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -42,7 +40,7 @@ public class Bot {
     private static ShardManager shardManager;
     private static ScheduledExecutorService generalThreadPool;
     public static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
-    public static EventWaiter waiter = new EventWaiter();
+
 
     public static void main(String[] args) throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
         // Load properties into the PropertiesManager
@@ -50,29 +48,18 @@ public class Bot {
         prop.load(new FileInputStream("bot.properties"));
         PropertiesManager.loadProperties(prop);
 
-        // Setup sentry.io
-        if (PropertiesManager.getSentryDsn() != null) {
-            LOGGER.info("Loading sentry.io...");
-            Sentry.init(options -> {
-                options.setDsn(PropertiesManager.getSentryDsn());
-                options.setEnvironment(PropertiesManager.getSentryEnv());
-                LOGGER.info("Sentry.io loaded");
-            });
-        }
-
         // Load the db
         StorageType storageType = StorageType.getByName(PropertiesManager.getDatabaseType());
         if (storageType == StorageType.UNKNOWN) {
-            LOGGER.error("Invalid database type! '" + PropertiesManager.getDatabaseType() + "'");
+            LOGGER.info("Invalid database type! '" + PropertiesManager.getDatabaseType() + "'");
             System.exit(1);
         }
 
         try {
             storageManager = storageType.getStorageManager().getDeclaredConstructor().newInstance();
             storageManager.setupStorage();
-            LOGGER.info("db has been setup");
         } catch (Exception e) {
-            LOGGER.error("Unable to create database link!" + e);
+            LOGGER.info("Unable to create database link!" + e);
             System.exit(1);
         }
 
@@ -87,48 +74,50 @@ public class Bot {
 
         generalThreadPool = Executors.newScheduledThreadPool(5);
 
-        // Register JDA
         try {
             shardManager = DefaultShardManagerBuilder.create(
-                    PropertiesManager.getToken(),
+                            PropertiesManager.getToken(),
                             GatewayIntent.GUILD_MEMBERS,
                             GatewayIntent.GUILD_PRESENCES,
-                            GatewayIntent.MESSAGE_CONTENT)
+                            GatewayIntent.MESSAGE_CONTENT,
+                            GatewayIntent.GUILD_MESSAGES)
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
+                    .enableIntents(GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)
                     .setShardsTotal(Integer.parseInt(PropertiesManager.getTotalShards())) // Total number of shards
                     .setShards(Integer.parseInt(PropertiesManager.getShardsId()))
                     .setChunkingFilter(ChunkingFilter.ALL)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)
                     .enableCache(CacheFlag.ACTIVITY)
                     .enableCache(CacheFlag.ROLE_TAGS)
+                    .setEnableShutdownHook(true)
                     .setStatus(OnlineStatus.ONLINE)
                     .setActivity(Activity.playing("Booting..."))
-                    .setEventManagerProvider((shardId) -> new SentryEventManager())
-                    .addEventListeners(waiter,
-                            client.build()
+                    .addEventListeners(new EventWaiter(),
+                            client.build(),
+                            new ShutdownHandler()
                     )
                     .build();
+
         } catch (IllegalArgumentException exception) {
-            LOGGER.error("Failed to initialize JDA!" + exception);
+            LOGGER.info("Failed to initialize JDA!" + exception);
             System.exit(1);
         }
 
-        // Register listeners
-        shardManager.addEventListener();
+        generalThreadPool.scheduleAtFixedRate(() -> {
+            shardManager.getShardById(0).getPresence().setActivity(Activity.watching(storageManager.getActiveServerCount() + " active servers."));
+        }, 5, 60 * 5, TimeUnit.SECONDS);
 
         MinecraftStatusUpdater statusUpdater = new MinecraftStatusUpdater();
         PlayerListUpdater playerListUpdater = new PlayerListUpdater();
         statusUpdater.startUpdateLoop();
         playerListUpdater.startUpdateLoop();
 
-        generalThreadPool.scheduleAtFixedRate(() -> {
-            shardManager.getShardById(0).getPresence().setActivity(Activity.playing("Currently monitoring: " + storageManager.getActiveServerCount() + " active servers."));
-        }, 5, 60 * 5, TimeUnit.SECONDS);
-
         // Shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(Bot::shutdown));
 
         LOGGER.info("MinecraftStatusBot has been started");
+
+
     }
 
     private static SlashCommand[] getSlashCommands() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
@@ -141,7 +130,7 @@ public class Bot {
             if (theClass.getSimpleName().contains("SubCommand")) continue;
 
             commands.add(theClass.getDeclaredConstructor().newInstance());
-            LoggerFactory.getLogger(theClass).debug("Loaded SlashCommand Successfully!");
+            LOGGER.debug("Loaded SlashCommand Successfully!");
         }
 
         return commands.toArray(new SlashCommand[0]);
@@ -155,16 +144,10 @@ public class Bot {
         return generalThreadPool;
     }
 
-    public static Logger getLogger() {
-        return LOGGER;
-    }
-
     public static void shutdown() {
-        Bot.LOGGER.info("Shutting down storage...");
         storageManager.closeStorage();
-        Bot.LOGGER.info("Shutting down thread pool...");
         generalThreadPool.shutdown();
-        Bot.LOGGER.info("Finished shutdown, exiting!");
+        LOGGER.info("Finished shutdown, exiting!");
         System.exit(0);
     }
 }

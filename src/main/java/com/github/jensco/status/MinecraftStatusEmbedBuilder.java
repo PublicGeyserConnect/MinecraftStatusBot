@@ -21,11 +21,7 @@ public class MinecraftStatusEmbedBuilder {
         int currentPlayers = statusData.getServerInfo().currentOnline();
         int openSlots = statusData.getServerInfo().openSlots();
 
-        long unixTimestamp = Instant.now().getEpochSecond();
-        String discordTime = "<t:"+ unixTimestamp +":R>";
-
         embedBuilder.setTitle("Status for " + serverData.serverName() + "\n(" + serverData.serverAddress() + ")")
-                .setColor(0x00FF00)
                 .addField("Server is", isOnline ? ":green_circle: Online" : ":red_circle: Offline", false)
                 .addField("MOTD", motd != null ? motd : "Unable to retrieve server information", true)
                 .addField("Version", version != null ? version : "Unavailable", true)
@@ -33,7 +29,8 @@ public class MinecraftStatusEmbedBuilder {
                 .addField("Currently Online", String.valueOf(currentPlayers), true)
                 .addField("Latency", latency > 0 ? latency + " ms" : "Unavailable", true)
                 .addField("Open Slots", String.valueOf(openSlots), true)
-                .addField("Last Status Update", discordTime, true)
+                .setFooter("last updated ")
+                .setTimestamp(Instant.now())
                 .setThumbnail(serverData.favicon());
 
         return embedBuilder.build();

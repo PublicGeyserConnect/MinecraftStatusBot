@@ -1,7 +1,5 @@
 package com.github.jensco.util;
 
-import net.dv8tion.jda.api.requests.GatewayIntent;
-
 import java.util.Properties;
 
 public class PropertiesManager {
@@ -51,20 +49,6 @@ public class PropertiesManager {
      */
     public static String getPass() {
         return properties.getProperty("db-pass");
-    }
-
-    /**
-     * @return Sentry DSN
-     */
-    public static String getSentryDsn() {
-        return properties.getProperty("sentry-dsn");
-    }
-
-    /**
-     * @return Sentry environment
-     */
-    public static String getSentryEnv() {
-        return properties.getProperty("sentry-env");
     }
 
     /**

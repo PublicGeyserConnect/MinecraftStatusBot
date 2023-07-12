@@ -1,6 +1,7 @@
 package com.github.jensco.playerlist;
 
 import com.github.jensco.status.MinecraftStatus;
+import com.github.jensco.util.BotColors;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
@@ -18,11 +19,11 @@ public class PlayerListEmbedBuilder {
         if (playerNames == null) {
             embedBuilder.setTitle("Player List Unavailable")
                     .setDescription("The server does not expose the player list.")
-                    .setColor(0xFF0000);
+                    .setColor(BotColors.FAILURE.getColor());
         } else if (playerNames.isEmpty()) {
             embedBuilder.setTitle("No Players Online")
                     .setDescription("There are no players currently online.")
-                    .setColor(0xFFFF00);
+                    .setColor(BotColors.WARNING.getColor());
         } else {
             StringBuilder playerListBuilder = new StringBuilder();
             for (String playerName : playerNames) {
@@ -34,7 +35,7 @@ public class PlayerListEmbedBuilder {
             String discordTime = "<t:" + unixTimestamp + ":R>";
 
             embedBuilder.setTitle("Online PlayerList for " + serverName)
-                    .setColor(0x00FF00)
+                    .setColor(BotColors.SUCCESS.getColor())
                     .addField("Last Status Update", discordTime, true)
                     .addField("Player List", playerList, false);
         }
