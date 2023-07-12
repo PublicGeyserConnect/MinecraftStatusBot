@@ -31,13 +31,11 @@ public class PlayerListEmbedBuilder {
             }
             String playerList = playerListBuilder.toString().trim();
 
-            long unixTimestamp = Instant.now().getEpochSecond();
-            String discordTime = "<t:" + unixTimestamp + ":R>";
-
             embedBuilder.setTitle("Online PlayerList for " + serverName)
                     .setColor(BotColors.SUCCESS.getColor())
-                    .addField("Last Status Update", discordTime, true)
-                    .addField("Player List", playerList, false);
+                    .addField("Player List", playerList, false)
+                    .setFooter("last updated ")
+                    .setTimestamp(Instant.now());
         }
 
         return embedBuilder.build();
