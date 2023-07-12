@@ -67,19 +67,17 @@ public class StatusEmbedCommand extends SlashCommand {
 
                 interactionHook.editOriginalEmbeds(
                                 MessageHelper.handleCommand("Server status embed is being activated, this can take a few seconds. Message will delete itself.", "Status Embed Settings"))
-                        .queueAfter(1, TimeUnit.SECONDS, sentMessage -> {
-                            Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId()))
-                                    .sendMessageEmbeds(handle(info))
-                                    .queue(sendStatus -> {
-                                        Bot.storageManager.setServerMessageAndChannelId(
-                                                event.getGuild().getId(), serverName,
-                                                sendStatus.getId(),
-                                                event.getChannel().getId(),
-                                                true);
+                        .queueAfter(1, TimeUnit.SECONDS, sentMessage -> Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId()))
+                                .sendMessageEmbeds(handle(info))
+                                .queue(sendStatus -> {
+                                    Bot.storageManager.setServerMessageAndChannelId(
+                                            event.getGuild().getId(), serverName,
+                                            sendStatus.getId(),
+                                            event.getChannel().getId(),
+                                            true);
 
-                                        sentMessage.delete().queue();
-                                    });
-                        });
+                                    sentMessage.delete().queue();
+                                }));
             });
         }
     }
@@ -110,19 +108,27 @@ public class StatusEmbedCommand extends SlashCommand {
                     }
 
                     if (!info.active()) {
-                        interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "Server embed was already disabled")).queue();
+                        interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "Server embed was already disabled.")).queue();
                         return;
                     }
 
                     // Remove the embed message using the channelID and messageID
                     Objects.requireNonNull(event.getGuild().getTextChannelById(info.channelID()))
                             .retrieveMessageById(info.messageID())
-                            .queue(message -> {
-                                message.delete().queue(deletedMessage -> {
-                                    interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server embed **" + serverName + "** is disabled.", "Status Embed Settings")).queue();
-                                    Bot.storageManager.setServerActiveStatus(event.getGuild().getId(), serverName, false);
-                                });
+                            .queue(message -> message.delete().queue(deletedMessage -> {
+                                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server embed **" + serverName + "** is disabled.", "Status Embed Settings"))
+                                        .queue();
+                                Bot.storageManager.setServerActiveStatus(event.getGuild().getId(), serverName, false);
+                            }, error -> {
+                                Bot.storageManager.setServerActiveStatus(event.getGuild().getId(), serverName, false);
+                                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server embed **" + serverName + "** was manually removed and has now been removed from our database.", "Status Embed Settings"))
+                                        .queue();
+                            }), error -> {
+                                Bot.storageManager.setServerActiveStatus(event.getGuild().getId(), serverName, false);
+                                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("Server embed **" + serverName + "** was manually removed and has now been removed from our database.", "Status Embed Settings"))
+                                        .queue();
                             });
+
                 });
             }
         }

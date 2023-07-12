@@ -32,11 +32,11 @@ public class PlayerListEmbedBuilder {
             String playerList = playerListBuilder.toString().trim();
 
             embedBuilder.setTitle("Online PlayerList for " + serverName)
-                    .setColor(BotColors.SUCCESS.getColor())
                     .addField("Player List", playerList, false)
-                    .setFooter("last updated ")
-                    .setTimestamp(Instant.now());
+                    .setFooter("last updated ");
         }
+
+        embedBuilder.setTimestamp(Instant.now());
 
         return embedBuilder.build();
     }

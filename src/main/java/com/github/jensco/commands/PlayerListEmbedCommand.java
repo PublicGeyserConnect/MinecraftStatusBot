@@ -64,18 +64,16 @@ public class PlayerListEmbedCommand extends SlashCommand {
                 if (playerListInfo == null) {
                     interactionHook.editOriginalEmbeds(
                                     MessageHelper.handleCommand("PlayerList embed is being activated, this can take a few seconds. this message will auto delete itself.", "PlayerList Embed Settings"))
-                            .queueAfter(1, TimeUnit.SECONDS, sentMessage -> {
-                                Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId()))
-                                        .sendMessageEmbeds(handle(serverInfo))
-                                        .queue(sendStatus -> {
-                                            Bot.storageManager.addPlayerList(
-                                                    event.getGuild().getId(), serverName,
-                                                    sendStatus.getId(),
-                                                    event.getChannel().getId(),
-                                                    true);
-                                            sentMessage.delete().queue();
-                                        });
-                            });
+                            .queueAfter(1, TimeUnit.SECONDS, sentMessage -> Objects.requireNonNull(Bot.getShardManager().getTextChannelById(event.getChannel().getId()))
+                                    .sendMessageEmbeds(handle(serverInfo))
+                                    .queue(sendStatus -> {
+                                        Bot.storageManager.addPlayerList(
+                                                event.getGuild().getId(), serverName,
+                                                sendStatus.getId(),
+                                                event.getChannel().getId(),
+                                                true);
+                                        sentMessage.delete().queue();
+                                    }));
                     return;
                 }
 
@@ -132,12 +130,18 @@ public class PlayerListEmbedCommand extends SlashCommand {
                 // Remove the embed message using the channelID and messageID
                 Objects.requireNonNull(event.getGuild().getTextChannelById(playerListInfo.channelID()))
                         .retrieveMessageById(playerListInfo.messageID())
-                        .queue(message -> {
-                            message.delete().queue(deletedMessage -> {
-                                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("PlayerList embed **" + serverName + "** is disabled.", "PlayerList Embed Settings"))
-                                        .queue();
-                                Bot.storageManager.removePlayerList(playerListInfo.guildID(), playerListInfo.serverName());
-                            });
+                        .queue(message -> message.delete().queue(deletedMessage -> {
+                            interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("PlayerList embed **" + serverName + "** is disabled.", "PlayerList Embed Settings"))
+                                    .queue();
+                            Bot.storageManager.removePlayerList(playerListInfo.guildID(), playerListInfo.serverName());
+                        }, error -> {
+                            Bot.storageManager.removePlayerList(playerListInfo.guildID(), playerListInfo.serverName());
+                            interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("PlayerList embed **" + serverName + "** was manually removed and has now been removed from our database.", "PlayerList Embed Settings"))
+                                    .queue();
+                        }), error -> {
+                            Bot.storageManager.removePlayerList(playerListInfo.guildID(), playerListInfo.serverName());
+                            interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("PlayerList embed **" + serverName + "** was manually removed and has now been removed from our database.", "PlayerList Embed Settings"))
+                                    .queue();
                         });
             });
         }
