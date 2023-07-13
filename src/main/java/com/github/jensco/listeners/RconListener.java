@@ -69,7 +69,7 @@ public class RconListener extends ListenerAdapter {
 
         if (count != null && count >= 1) {
             textChannel = event.getChannel().asTextChannel();
-            textChannel.sendMessage("You can only send 1 command every 10 seconds in this channel.").queue();
+            textChannel.sendMessage("You can only send 1 command every 5 seconds in this channel.").queue();
             return;
         }
 
