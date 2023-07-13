@@ -23,6 +23,8 @@ dependencies {
 
     implementation("ch.qos.logback", "logback-classic", "1.2.10")
 
+    implementation("nl.vv32.rcon:rcon:1.2.0")
+
     // Web requests and json
     implementation("org.json:json:20230227")
 

@@ -2,6 +2,7 @@ package com.github.jensco.storage;
 
 import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.records.PlayerListDataRecord;
+import com.github.jensco.records.RconRecord;
 import com.github.jensco.records.ServerDataRecord;
 
 import java.util.List;
@@ -57,4 +58,14 @@ public abstract class AbstractStorageManager {
     public abstract boolean removePlayerListByMessageId(String guildId, String messageId);
 
     public abstract boolean deactivateServerByMessageId(String guildId, String messageId);
+
+    public abstract void setRcon(String guildId, String serverName, String serverAddress, int rconPort, String channelId);
+
+    public abstract RconRecord getRconData(String guildId, String serverName);
+
+    public abstract RconRecord getRconDataByGuildAndChannelId(String guildId, String channelId);
+
+    public abstract boolean isChannelIdPresent(String channelId);
+
+    public abstract void removeRconSettings(String guildId, String serverName);
 }

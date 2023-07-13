@@ -1,11 +1,15 @@
 package com.github.jensco;
 
+import com.github.jensco.listeners.RconListener;
 import com.github.jensco.listeners.ShutdownHandler;
 import com.github.jensco.playerlist.PlayerListUpdater;
+import com.github.jensco.records.RconLoginRecord;
 import com.github.jensco.status.MinecraftStatusUpdater;
 import com.github.jensco.storage.AbstractStorageManager;
 import com.github.jensco.storage.StorageType;
 import com.github.jensco.util.PropertiesManager;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
@@ -40,7 +44,7 @@ public class Bot {
     private static ShardManager shardManager;
     private static ScheduledExecutorService generalThreadPool;
     public static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
-
+    public static Cache<String, RconLoginRecord> rconDataCache;
 
     public static void main(String[] args) throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
         // Load properties into the PropertiesManager
@@ -94,7 +98,8 @@ public class Bot {
                     .setActivity(Activity.playing("Booting..."))
                     .addEventListeners(new EventWaiter(),
                             client.build(),
-                            new ShutdownHandler()
+                            new ShutdownHandler(),
+                            new RconListener()
                     )
                     .build();
 
@@ -107,6 +112,10 @@ public class Bot {
             shardManager.getShardById(0).getPresence().setActivity(Activity.watching(storageManager.getActiveServerCount() + " active servers."));
         }, 5, 60 * 5, TimeUnit.SECONDS);
 
+        rconDataCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(30, TimeUnit.MINUTES)
+                .build();
+
         MinecraftStatusUpdater statusUpdater = new MinecraftStatusUpdater();
         PlayerListUpdater playerListUpdater = new PlayerListUpdater();
         statusUpdater.startUpdateLoop();
@@ -116,8 +125,6 @@ public class Bot {
         Runtime.getRuntime().addShutdownHook(new Thread(Bot::shutdown));
 
         LOGGER.info("MinecraftStatusBot has been started");
-
-
     }
 
     private static SlashCommand[] getSlashCommands() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
@@ -138,10 +145,6 @@ public class Bot {
 
     public static ShardManager getShardManager() {
         return shardManager;
-    }
-
-    public static ScheduledExecutorService getGeneralThreadPool() {
-        return generalThreadPool;
     }
 
     public static void shutdown() {
