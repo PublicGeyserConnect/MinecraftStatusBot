@@ -9,21 +9,18 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static com.github.jensco.Bot.LOGGER;
 
 public class MinecraftStatusUpdater {
     private final ScheduledExecutorService executorService;
-    private final Map<String, Integer> offlineCountMap = new HashMap<>();
+    private final Map<String, Integer> offlineCountMap = new ConcurrentHashMap<>();
 
     public MinecraftStatusUpdater() {
-        executorService = Executors.newSingleThreadScheduledExecutor(); // Use a single-threaded executor
+        executorService = Executors.newScheduledThreadPool(6); // Use a thread pool with 6 threads
     }
 
     public void startUpdateLoop() {
@@ -33,21 +30,30 @@ public class MinecraftStatusUpdater {
     public void retrieveMessages() {
         List<ServerDataRecord> serverDataRecordList = Bot.storageManager.getAllActiveServers();
 
-        for (ServerDataRecord serverDataRecord : serverDataRecordList) {
-            String channelId = serverDataRecord.channelID();
-            String messageId = serverDataRecord.messageID();
+        CompletableFuture.allOf(serverDataRecordList.stream()
+                        .map(serverDataRecord -> CompletableFuture.supplyAsync(() -> retrieveAndUpdateMessage(serverDataRecord))).toArray(CompletableFuture[]::new))
+                .exceptionally(ex -> {
+                    LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
+                    return null;
+                })
+                .join();
+    }
 
-            TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
-            if (channel != null) {
-                channel.retrieveMessageById(messageId).queue(
-                        message -> updateMessageEmbed(serverDataRecord, message, channel),
-                        exception -> {
-                            if (Bot.storageManager.deactivateServerByMessageId(serverDataRecord.guildId(), messageId)) {
-                                LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
-                            }
-                        });
-            }
+    private Void retrieveAndUpdateMessage(ServerDataRecord serverDataRecord) {
+        String channelId = serverDataRecord.channelID();
+        String messageId = serverDataRecord.messageID();
+
+        TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
+        if (channel != null) {
+            channel.retrieveMessageById(messageId).queue(
+                    message -> updateMessageEmbed(serverDataRecord, message, channel),
+                    exception -> {
+                        if (Bot.storageManager.deactivateServerByMessageId(serverDataRecord.guildId(), messageId)) {
+                            LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
+                        }
+                    });
         }
+        return null;
     }
 
     private void updateMessageEmbed(ServerDataRecord serverData, Message message, TextChannel channel) {
