@@ -44,13 +44,13 @@ public class PlayerListEmbedCommand extends SlashCommand {
                     Permission.MANAGE_SERVER
             };
             this.options = Collections.singletonList(
-                    new OptionData(OptionType.STRING, "alias", "The alias or name of the server to enable the PlayerList embed.", true)
+                    new OptionData(OptionType.STRING, "displayname", "The display name of the server to enable the PlayerList embed.", true)
             );
         }
 
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
-            String serverName = event.optString("alias");
+            String serverName = event.optString("displayname");
             PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListData(event.getGuild().getId(), serverName);
             ServerDataRecord serverInfo = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
@@ -104,13 +104,13 @@ public class PlayerListEmbedCommand extends SlashCommand {
                     Permission.MANAGE_SERVER
             };
             this.options = Collections.singletonList(
-                    new OptionData(OptionType.STRING, "alias", "The alias or name of the server to disable the PlayerList embed.", true)
+                    new OptionData(OptionType.STRING, "displayname", "The display name of the server to disable the PlayerList embed.", true)
             );
         }
 
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
-            String serverName = event.optString("alias");
+            String serverName = event.optString("displayname");
 
             event.deferReply().queue(interactionHook -> {
                 PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListData(event.getGuild().getId(), serverName);

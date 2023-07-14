@@ -2,6 +2,7 @@ package com.github.jensco.storage;
 
 import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.records.PlayerListDataRecord;
+import com.github.jensco.records.RconRecord;
 import com.github.jensco.records.ServerDataRecord;
 import com.github.jensco.util.PropertiesManager;
 
@@ -46,10 +47,20 @@ public class SqliteStorageManager extends AbstractStorageManager {
                 "PRIMARY KEY (guildid, servername)" +
                 ")";
 
+        String createRconTableQuery = "CREATE TABLE IF NOT EXISTS rcon (" +
+                "guildid VARCHAR(255) NOT NULL, " +
+                "servername VARCHAR(255) NOT NULL, " +
+                "serveraddress VARCHAR(255) NOT NULL, " +
+                "rconport INT NOT NULL, " +
+                "channelid VARCHAR(255) NOT NULL, " +
+                "PRIMARY KEY (guildid, servername)" +
+                ")";
+
         Statement createTables = connection.createStatement();
         createTables.executeUpdate(createTableQuery);
         createTables.executeUpdate(createNotificationTableQuery);
         createTables.executeUpdate(createPlayerListTableQuery);
+        createTables.executeUpdate(createRconTableQuery);
         createTables.close();
     }
 
@@ -491,5 +502,121 @@ public class SqliteStorageManager extends AbstractStorageManager {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public void setRcon(String guildId, String serverName, String serverAddress, int rconPort, String channelId) {
+        try {
+            // Insert the RCON information
+            PreparedStatement insertStatement = connection.prepareStatement(
+                    "INSERT INTO rcon (guildid, servername, serveraddress, rconport, channelid) VALUES (?, ?, ?, ?, ?)"
+            );
+            insertStatement.setString(1, guildId);
+            insertStatement.setString(2, serverName);
+            insertStatement.setString(3, serverAddress);
+            insertStatement.setInt(4, rconPort);
+            insertStatement.setString(5, channelId);
+
+            insertStatement.executeUpdate();
+            insertStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public RconRecord getRconData(String guildId, String serverName) {
+        RconRecord rconData = null;
+        try {
+            PreparedStatement selectStatement = connection.prepareStatement(
+                    "SELECT guildid, servername, serveraddress, rconport, channelid FROM rcon WHERE guildid = ? AND servername = ?"
+            );
+            selectStatement.setString(1, guildId);
+            selectStatement.setString(2, serverName);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String retrievedGuildId = resultSet.getString("guildid");
+                String retrievedServerName = resultSet.getString("servername");
+                String serverAddress = resultSet.getString("serveraddress");
+                int rconPort = resultSet.getInt("rconport");
+                String channelId = resultSet.getString("channelid");
+
+                rconData = new RconRecord(retrievedGuildId, retrievedServerName, rconPort, serverAddress, channelId);
+            }
+
+            resultSet.close();
+            selectStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rconData;
+    }
+
+    @Override
+    public RconRecord getRconDataByGuildAndChannelId(String guildId, String channelId) {
+        RconRecord rconData = null;
+        try {
+            PreparedStatement selectStatement = connection.prepareStatement(
+                    "SELECT guildid, servername, serveraddress, rconport, channelid FROM rcon WHERE guildid = ? AND channelid = ?"
+            );
+            selectStatement.setString(1, guildId);
+            selectStatement.setString(2, channelId);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String retrievedGuildId = resultSet.getString("guildid");
+                String serverName = resultSet.getString("servername");
+                String serverAddress = resultSet.getString("serveraddress");
+                int rconPort = resultSet.getInt("rconport");
+                String retrievedChannelId = resultSet.getString("channelid");
+
+                rconData = new RconRecord(retrievedGuildId, serverName, rconPort, serverAddress, retrievedChannelId);
+            }
+
+            resultSet.close();
+            selectStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rconData;
+    }
+
+    @Override
+    public boolean isChannelIdPresent(String channelId) {
+        try {
+            PreparedStatement selectStatement = connection.prepareStatement(
+                    "SELECT COUNT(*) AS count FROM rcon WHERE channelid = ?"
+            );
+            selectStatement.setString(1, channelId);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                int count = resultSet.getInt("count");
+                return count > 0;
+            }
+
+            resultSet.close();
+            selectStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public void removeRconSettings(String guildId, String serverName) {
+        try {
+            PreparedStatement deleteStatement = connection.prepareStatement(
+                    "DELETE FROM rcon WHERE guildid = ? AND servername = ?"
+            );
+            deleteStatement.setString(1, guildId);
+            deleteStatement.setString(2, serverName);
+
+            deleteStatement.executeUpdate();
+            deleteStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

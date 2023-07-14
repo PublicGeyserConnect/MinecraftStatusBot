@@ -83,7 +83,7 @@ public class ServerCommand extends SlashCommand {
                     Permission.MANAGE_SERVER
             };
             this.options = Arrays.asList(
-                    new OptionData(OptionType.STRING, "alias", "The alias or name of the server", true),
+                    new OptionData(OptionType.STRING, "displayname", "The display name of the server", true),
                     new OptionData(OptionType.STRING, "address", "The IP address of the server", true),
                     new OptionData(OptionType.INTEGER, "port", "The port number of the server", true),
                     new OptionData(OptionType.BOOLEAN, "image", "Favicon image url", false)
@@ -142,14 +142,14 @@ public class ServerCommand extends SlashCommand {
                     Permission.MANAGE_SERVER
             };
             this.options = Arrays.asList(
-                    new OptionData(OptionType.STRING, "alias", "The alias or name of the server", true),
+                    new OptionData(OptionType.STRING, "displayname", "The display name of the server", true),
                     new OptionData(OptionType.STRING, "url", "The url of the image", true)
                     );
         }
 
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
-            String serverName = event.optString("alias");
+            String serverName = event.optString("displayname");
             String imageUrl = event.optString("url");
             InteractionHook interactionHook = event.deferReply().complete();
 
@@ -171,7 +171,7 @@ public class ServerCommand extends SlashCommand {
 
     @NotNull
     private static MessageEmbed handle(@NotNull SlashCommandEvent event) {
-        String serverName = event.optString("alias", "");
+        String serverName = event.optString("displayname", "");
         String serverAddress = event.optString("address", "");
         int serverPort = Objects.requireNonNull(event.getOption("port")).getAsInt();
         String favicon = event.optString("favicon", "https://packpng.com/static/pack.png");
