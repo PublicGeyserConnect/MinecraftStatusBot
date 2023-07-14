@@ -82,7 +82,11 @@ public class RconListener extends ListenerAdapter {
         try {
             try(Rcon rcon = Rcon.open(rconRecord.serverAddress(), rconRecord.rconPort())) {
                 if (rcon.authenticate(loginInfo.password())) {
-                    textChannel.sendMessage(rcon.sendCommand(event.getMessage().getContentRaw())).queue();
+                    String response = rcon.sendCommand(event.getMessage().getContentRaw());
+                    // very yuck regex but need it for color codes invalid chars
+                    String cleanresponse = response.replaceAll("(?<=\\P{Print})(\\p{L}|\\p{N})","").replaceAll("[^\\p{Print}\\n]", "");
+                    textChannel.sendMessage(cleanresponse).queue();
+
                 } else {
                     textChannel.sendMessage("Failed to authenticate").queue();
                 }

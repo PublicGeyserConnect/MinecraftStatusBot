@@ -42,13 +42,13 @@ public class StatusEmbedCommand extends SlashCommand {
                     Permission.MANAGE_SERVER
             };
             this.options = Collections.singletonList(
-                    new OptionData(OptionType.STRING, "alias", "The alias or name of the server to activate", true)
+                    new OptionData(OptionType.STRING, "displayname", "The display name of the server to activate", true)
             );
         }
 
         @Override
         protected void execute(@NotNull SlashCommandEvent event) {
-            String serverName = event.optString("alias");
+            String serverName = event.optString("displayname");
 
             event.deferReply().queue(interactionHook -> {
                 ServerDataRecord info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
@@ -91,13 +91,13 @@ public class StatusEmbedCommand extends SlashCommand {
                         Permission.MANAGE_SERVER
                 };
                 this.options = Collections.singletonList(
-                        new OptionData(OptionType.STRING, "alias", "The alias or name of the server to disable", true)
+                        new OptionData(OptionType.STRING, "displayname", "The display name of the server to disable", true)
                 );
             }
 
             @Override
             protected void execute(@NotNull SlashCommandEvent event) {
-                String serverName = event.optString("alias");
+                String serverName = event.optString("displayname");
                 Checks.notNull(event.getGuild(), "server");
                 event.deferReply().queue(interactionHook -> {
                     ServerDataRecord info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
