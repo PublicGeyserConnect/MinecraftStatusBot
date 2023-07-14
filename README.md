@@ -86,6 +86,9 @@ and set `enable-rcon` to true to enable the feature, set the port to a port you 
 `/rcon login <servername> <rcon password>`
 This is used to login to the server so that you can remotely access the console. The password is *not* saved to long term storage, and is only remembered for 30 minutes.
 
+`/rcon delete <servername>`
+Use this to remove the RCON config. 
+
 
 ## Limitations
 - Bedrock servers do not reveal a player list, so the player list feature is not supported on them.
