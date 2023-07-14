@@ -32,7 +32,8 @@ dependencies {
 
     // Database implementations
     implementation("com.mysql:mysql-connector-j:8.0.33")
-    implementation("org.xerial:sqlite-jdbc:3.41.2.1")
+    implementation("org.xerial:sqlite-jdbc:3.42.0.0")
+    implementation("com.zaxxer:HikariCP:5.0.1")
 
     // Pinging java and bedrock servers
     implementation("com.github.rtm516:minecraft-server-ping:c61c496104")
