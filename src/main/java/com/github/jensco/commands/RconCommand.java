@@ -90,7 +90,7 @@ public class RconCommand extends SlashCommand {
 
                 if (rconData == null) {
                     Bot.storageManager.setRcon(event.getGuild().getId(), serverName, serverData.serverAddress(), rconPort, channelId);
-                    interactionHook.editOriginalEmbeds(MessageHelper.handleCommand( "Rcon Settings", "Rcon has been setup, You can now activate rcon for this server."))
+                    interactionHook.editOriginalEmbeds(MessageHelper.handleCommand( "Rcon has been setup, You can now activate rcon for this server.", "Rcon Settings"))
                             .queue();
                     return;
                 }
@@ -148,7 +148,7 @@ public class RconCommand extends SlashCommand {
                     Bot.rconDataCache.put(guildId, loginInfo);
                 }
 
-                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand( "Rcon Login", "Successfully been logged in and are now able to send commands to console. Login expires automatically after 30 minutes."))
+                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand( "Successfully been logged in and are now able to send commands to console. Login expires automatically after 30 minutes.", "Rcon Login"))
                         .queue();
             });
         }
@@ -182,7 +182,7 @@ public class RconCommand extends SlashCommand {
                 }
 
                 Bot.storageManager.removeRconSettings(event.getGuild().getId(), serverName);
-                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand( "Rcon Delete", "The Rcon settings for "+ serverName + " are deleted."))
+                interactionHook.editOriginalEmbeds(MessageHelper.handleCommand("The Rcon settings for "+ serverName + " are deleted.", "Rcon Delete"))
                         .queue();
             });
 
