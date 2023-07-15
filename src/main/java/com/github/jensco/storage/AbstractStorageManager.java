@@ -47,6 +47,8 @@ public abstract class AbstractStorageManager {
 
     public abstract int getUniqueGuildCount();
 
+    public abstract int getUniqueRconGuildCount();
+
     public abstract void addPlayerList(String guildId, String serverName, String messageId, String channelId, boolean active);
 
     public abstract boolean removePlayerList(String guildId, String serverName);

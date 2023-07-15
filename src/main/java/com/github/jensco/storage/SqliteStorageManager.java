@@ -377,6 +377,22 @@ public class SqliteStorageManager extends AbstractStorageManager {
     }
 
     @Override
+    public int getUniqueRconGuildCount() {
+        int uniqueGuildCount = 0;
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery("SELECT COUNT(DISTINCT guildid) AS count FROM rcon");
+            if (resultSet.next()) {
+                uniqueGuildCount = resultSet.getInt("count");
+            }
+            resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return uniqueGuildCount;
+    }
+
+    @Override
     public void addPlayerList(String guildId, String serverName, String messageId, String channelId, boolean active) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement insertStatement = connection.prepareStatement(
