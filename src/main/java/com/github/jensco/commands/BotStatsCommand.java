@@ -45,20 +45,28 @@ public class BotStatsCommand extends SlashCommand {
         long freeMemory = Runtime.getRuntime().freeMemory();
         long usedMemory = totalMemory - freeMemory;
 
+        // CPU Usage
+        double cpuUsage = getCPUUsage();
+
+        // RAM Usage
+        String ramUsage = getRAMUsage(usedMemory, maxMemory);
+
         // Build the embed using descriptions without using fields
         EmbedBuilder helpEmbed = new EmbedBuilder()
                 .setTitle("Bot Statistics")
                 .setColor(BotColors.SUCCESS.getColor())
                 .setThumbnail("https://cdn2.iconfinder.com/data/icons/whcompare-isometric-web-hosting-servers/50/server-2-512.png")
                 .setDescription(
-                        "**Servers:** " + Bot.storageManager.getActiveServerCount() + "\n" +
+                        "**Servers Tracking :** " + Bot.storageManager.getActiveServerCount() + "\n" +
                                 "**Guilds Handled:** " + Bot.storageManager.getUniqueGuildCount() + "\n" +
+                                "**Rcon Handled:** " + Bot.storageManager.getUniqueRconGuildCount() + "\n" +
                                 "**Bot Uptime:** <t:" + uptimeSeconds + ":f>\n" +
                                 "\n" +
                                 "**Server Performance**\n" +
                                 "**Server:** " + PropertiesManager.getServerName() + "\n" +
                                 "**OS and Cores:** " + osName + " " + osArch + " (" + availableProcessors + " cores)\n" +
-                                "**Memory:** " + formatMemory(usedMemory) + " / " + formatMemory(maxMemory) + "\n" +
+                                "**CPU Usage:** " + String.format("%.2f%%", cpuUsage) + "\n" +
+                                "**Memory Usage:** " + ramUsage + "\n" +
                                 "\n" +
                                 "**Shard Info**\n" +
                                 "**Shards:** " + PropertiesManager.getTotalShards() + "\n" +
@@ -68,17 +76,19 @@ public class BotStatsCommand extends SlashCommand {
         return helpEmbed.build();
     }
 
-    private String formatMemory(long bytes) {
-        double kilobytes = bytes / 1024.0;
-        double megabytes = kilobytes / 1024.0;
-        double gigabytes = megabytes / 1024.0;
-
-        if (gigabytes >= 1) {
-            return String.format("%.2f GB", gigabytes);
-        } else if (megabytes >= 1) {
-            return String.format("%.2f MB", megabytes);
+    private double getCPUUsage() {
+        OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
+        if (osBean instanceof com.sun.management.OperatingSystemMXBean sunOsBean) {
+            return sunOsBean.getCpuLoad() * 100;
         } else {
-            return String.format("%.2f KB", kilobytes);
+            return 0.0;
         }
+    }
+
+    private String getRAMUsage(long usedMemory, long maxMemory) {
+        double usedMegabytes = usedMemory / (1024.0 * 1024.0);
+        double maxMegabytes = maxMemory / (1024.0 * 1024.0);
+
+        return String.format("%.2f MB / %.2f MB", usedMegabytes, maxMegabytes);
     }
 }

@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
+import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,7 @@ public class Bot {
                     .setEnableShutdownHook(true)
                     .setStatus(OnlineStatus.ONLINE)
                     .setActivity(Activity.playing("Booting..."))
+                    .setEnableShutdownHook(true)
                     .addEventListeners(new EventWaiter(),
                             client.build(),
                             new ShutdownHandler(),
@@ -121,12 +123,10 @@ public class Bot {
         statusUpdater.startUpdateLoop();
         playerListUpdater.startUpdateLoop();
 
-        // Shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(Bot::shutdown));
-
         LOGGER.info("MinecraftStatusBot has been started");
     }
 
+    @NotNull
     private static SlashCommand[] getSlashCommands() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         Reflections reflections = new Reflections("com.github.jensco.commands");
         Set<Class<? extends SlashCommand>> subTypes = reflections.getSubTypesOf(SlashCommand.class);
@@ -148,7 +148,9 @@ public class Bot {
     }
 
     public static void shutdown() {
+        LOGGER.info("Shutting down storage...");
         storageManager.closeStorage();
+        LOGGER.info("Shutting down thread pool...");
         generalThreadPool.shutdown();
         LOGGER.info("Finished shutdown, exiting!");
         System.exit(0);
