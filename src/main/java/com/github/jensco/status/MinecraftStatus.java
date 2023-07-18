@@ -57,26 +57,27 @@ public class MinecraftStatus {
             MinecraftServerQuery javaData = (javaDataFuture != null) ? javaDataFuture.get() : null;
             MinecraftServerQuery bedrockData = (bedrockDataFuture != null) ? bedrockDataFuture.get() : null;
 
-            if (javaData != null && javaData.isOnline()) {
+            if (javaData != null && javaData.online) {
                 javaOnline = true;
-                motd = javaData.getMotd().getClean();
-                version = javaData.getVersion().getNameClean();
-                maxPlayers = javaData.getPlayers().getMax();
-                currentOnline = javaData.getPlayers().getOnline();
-                latency = javaData.getLatency();
+                motd = javaData.motd.clean;
+                version = javaData.version.name_clean;
+                maxPlayers = javaData.players.max;
+                currentOnline = javaData.players.online;
+                latency = javaData.latency;
                 openSlots = maxPlayers - currentOnline;
-                List<Player> javaPlayers = javaData.getPlayers().getList();
+                List<Player> javaPlayers = javaData.players.list;
                 for (Player player : javaPlayers) {
                     playerNames.add(player.getNameClean());
                 }
                 platform = "Java";
-            } else if (bedrockData != null && bedrockData.isOnline()) {
+            } else if (bedrockData != null && bedrockData.online) {
                 bedrockOnline = true;
-                motd = bedrockData.getMotd().getClean();
-                version = String.valueOf(bedrockData.getVersion().getProtocol());
-                maxPlayers = bedrockData.getPlayers().getMax();
-                currentOnline = bedrockData.getPlayers().getOnline();
-                latency = bedrockData.getLatency();
+                motd = bedrockData.motd.clean;
+                version = String.valueOf(bedrockData.version.protocol);
+                maxPlayers = bedrockData.players.max;
+                currentOnline = bedrockData.players.online;
+                openSlots = maxPlayers - currentOnline;
+                latency = bedrockData.latency;
                 platform = "Bedrock";
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -97,6 +98,7 @@ public class MinecraftStatus {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+                System.out.println(reader);
                 MinecraftServerQuery statusResponse = gson.fromJson(reader, MinecraftServerQuery.class);
                 reader.close();
 
