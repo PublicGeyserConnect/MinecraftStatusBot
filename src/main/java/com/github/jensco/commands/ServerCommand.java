@@ -1,6 +1,7 @@
 package com.github.jensco.commands;
 
 import com.github.jensco.Bot;
+import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.status.MinecraftStatus;
 import com.github.jensco.util.MessageHelper;
 import com.jagrosh.jdautilities.command.SlashCommand;
@@ -182,14 +183,14 @@ public class ServerCommand extends SlashCommand {
         }
 
         // Create a ServerPing instance and ping the server
-        MinecraftStatus data = new MinecraftStatus(serverAddress, serverPort);
+        MinecraftServerInfo serverInfo = new MinecraftStatus(serverAddress, serverPort, null).getServerInfo();
 
-        if (data.getServerInfo() == null) {
+        if (serverInfo == null) {
             return MessageHelper.errorResponse(null, "Server Settings", "The ip you provided is invalid");
 
         }
 
-        if (!data.getServerInfo().serverStatus()) {
+        if (!serverInfo.serverStatus()) {
             return MessageHelper.errorResponse(null, "Server Settings", "Server was not reachable.");
         }
         // people only allowed to have 5 servers at a time
@@ -204,7 +205,7 @@ public class ServerCommand extends SlashCommand {
         }
         // add server to database
         try {
-            Bot.storageManager.addServer(event.getGuild().getId(), serverName, serverAddress, serverPort, favicon);
+            Bot.storageManager.addServer(event.getGuild().getId(), serverName, serverAddress, serverPort, favicon, serverInfo.platform());
         } catch (Exception e) {
             return MessageHelper.errorResponse(null, "Server Settings", "Server was not added in the database. " + e.getMessage());
         }

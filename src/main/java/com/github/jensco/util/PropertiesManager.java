@@ -72,4 +72,8 @@ public class PropertiesManager {
         return properties.getProperty("server-name");
     }
 
+    public static String getEndpointUrl() {
+        return properties.getProperty("endpoint-url");
+    }
+
 }

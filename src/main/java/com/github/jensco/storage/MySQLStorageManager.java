@@ -3,7 +3,7 @@ package com.github.jensco.storage;
 import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.records.PlayerListDataRecord;
 import com.github.jensco.records.RconRecord;
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import com.github.jensco.util.PropertiesManager;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -60,6 +60,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
                     "channelid VARCHAR(255), " +
                     "messageid VARCHAR(255), " +
                     "favicon VARCHAR(255), " +
+                    "platform VARCHAR(255), " +
                     "PRIMARY KEY (guildid, servername)" +
                     ")";
 
@@ -98,10 +99,10 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public void addServer(String guildId, String serverName, String serverAddress, int serverPort, String favicon) {
+    public void addServer(String guildId, String serverName, String serverAddress, int serverPort, String favicon, String platform) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement insertStatement = connection.prepareStatement(
-                     "INSERT INTO servers (guildid, servername, serveraddress, serverport, active, favicon) VALUES (?, ?, ?, ?, ?, ?)"
+                     "INSERT INTO servers (guildid, servername, serveraddress, serverport, active, favicon, platform) VALUES (?, ?, ?, ?, ?, ?, ?)"
              )) {
             insertStatement.setString(1, guildId);
             insertStatement.setString(2, serverName);
@@ -109,6 +110,7 @@ public class MySQLStorageManager extends AbstractStorageManager {
             insertStatement.setInt(4, serverPort);
             insertStatement.setBoolean(5, false);
             insertStatement.setString(6, favicon);
+            insertStatement.setString(7, platform);
 
             insertStatement.executeUpdate();
         } catch (SQLException e) {
@@ -154,11 +156,11 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public ServerDataRecord getServerInfo(String serverName, String guildId) {
-        ServerDataRecord serverDataRecord = null;
+    public ServerInfoFromDatabase getServerInfo(String serverName, String guildId) {
+        ServerInfoFromDatabase serverInfoFromDatabase = null;
         try (Connection connection = dataSource.getConnection();
              PreparedStatement selectStatement = connection.prepareStatement(
-                     "SELECT guildid, servername, serveraddress, serverport, active, messageid, channelid, favicon FROM servers WHERE servername = ? AND guildid = ?"
+                     "SELECT guildid, servername, serveraddress, serverport, active, messageid, channelid, favicon, platform FROM servers WHERE servername = ? AND guildid = ?"
              )) {
             selectStatement.setString(1, serverName);
             selectStatement.setString(2, guildId);
@@ -172,15 +174,16 @@ public class MySQLStorageManager extends AbstractStorageManager {
                 String messageID = resultSet.getString("messageid");
                 String channelId = resultSet.getString("channelid");
                 String favicon = resultSet.getString("favicon");
+                String platform = resultSet.getString("platform");
 
-                serverDataRecord = new ServerDataRecord(guildId, name, address, port, active, messageID, channelId, favicon);
+                serverInfoFromDatabase = new ServerInfoFromDatabase(guildId, name, address, port, active, messageID, channelId, favicon, platform);
             }
 
             resultSet.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return serverDataRecord;
+        return serverInfoFromDatabase;
     }
 
     @Override
@@ -218,12 +221,12 @@ public class MySQLStorageManager extends AbstractStorageManager {
     }
 
     @Override
-    public List<ServerDataRecord> getAllActiveServers() {
-        List<ServerDataRecord> activeServers = new ArrayList<>();
+    public List<ServerInfoFromDatabase> getAllActiveServers() {
+        List<ServerInfoFromDatabase> activeServers = new ArrayList<>();
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement selectStatement = connection.prepareStatement(
-                     "SELECT guildid, servername, serveraddress, serverport, active, messageid, channelid, favicon FROM servers WHERE active = ?"
+                     "SELECT guildid, servername, serveraddress, serverport, active, messageid, channelid, favicon, platform FROM servers WHERE active = ?"
              )) {
             selectStatement.setBoolean(1, true);
             ResultSet resultSet = selectStatement.executeQuery();
@@ -237,9 +240,10 @@ public class MySQLStorageManager extends AbstractStorageManager {
                 String messageID = resultSet.getString("messageid");
                 String channelId = resultSet.getString("channelid");
                 String favicon = resultSet.getString("favicon");
+                String platform = resultSet.getString("favicon");
 
-                ServerDataRecord serverDataRecord = new ServerDataRecord(guildId, serverName, serverAddress, serverPort, active, messageID, channelId, favicon);
-                activeServers.add(serverDataRecord);
+                ServerInfoFromDatabase serverInfoFromDatabase = new ServerInfoFromDatabase(guildId, serverName, serverAddress, serverPort, active, messageID, channelId, favicon, platform);
+                activeServers.add(serverInfoFromDatabase);
             }
 
             resultSet.close();

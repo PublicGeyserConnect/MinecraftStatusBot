@@ -1,36 +1,46 @@
 package com.github.jensco.status;
 
-import br.com.azalim.mcserverping.MCPing;
-import br.com.azalim.mcserverping.MCPingOptions;
-import br.com.azalim.mcserverping.MCPingResponse;
-import br.com.azalim.mcserverping.MCPingUtil;
-import com.github.jensco.records.StatusRecord;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockPong;
+import com.github.jensco.pojo.MinecraftServerQuery;
+import com.github.jensco.pojo.Player;
+import com.github.jensco.records.MinecraftServerInfo;
+import com.github.jensco.util.PropertiesManager;
+import com.google.gson.Gson;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class MinecraftStatus {
-    private final String ip;
-    private final int port;
+    private static final String JAVA_API_ENDPOINT = PropertiesManager.getEndpointUrl() + "/status/java/";
+    private static final String BEDROCK_API_ENDPOINT = PropertiesManager.getEndpointUrl() + "/status/bedrock/";
 
-    private static final int TIMEOUT_MS = 1500;
+    private final String serverAddress;
+    private final int serverPort;
+    private final String platform;
 
-    public MinecraftStatus(String ip, int port) {
-        this.ip = ip;
-        this.port = port;
+    public MinecraftStatus(String serverAddress, int serverPort, String platform) {
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        this.platform = platform;
     }
 
-    public StatusRecord getServerInfo() {
-        CompletableFuture<MCPingResponse> javaDataFuture = CompletableFuture.supplyAsync(this::getJavaServerInfo);
-        CompletableFuture<BedrockPong> bedrockDataFuture = CompletableFuture.supplyAsync(this::getBedrockServerInfo);
+    public MinecraftServerInfo getServerInfo() {
+        CompletableFuture<MinecraftServerQuery> javaDataFuture = null;
+        CompletableFuture<MinecraftServerQuery> bedrockDataFuture = null;
+
+        if (platform == null || platform.equals("Java")) {
+            javaDataFuture = CompletableFuture.supplyAsync(() -> getServerStatus(JAVA_API_ENDPOINT + serverAddress + ":" + serverPort));
+        }
+
+        if (platform == null || platform.equals("Bedrock")) {
+            bedrockDataFuture = CompletableFuture.supplyAsync(() -> getServerStatus(BEDROCK_API_ENDPOINT + serverAddress + ":" + serverPort));
+        }
 
         boolean javaOnline = false;
         boolean bedrockOnline = false;
@@ -41,66 +51,62 @@ public class MinecraftStatus {
         long latency = 0;
         int openSlots = 0;
         List<String> playerNames = new ArrayList<>();
+        String platform = null;
 
         try {
-            MCPingResponse javaData = javaDataFuture.get();
-            BedrockPong bedrockData = bedrockDataFuture.get();
+            MinecraftServerQuery javaData = (javaDataFuture != null) ? javaDataFuture.get() : null;
+            MinecraftServerQuery bedrockData = (bedrockDataFuture != null) ? bedrockDataFuture.get() : null;
 
-            if (javaData != null) {
-                motd = javaData.getDescription().getStrippedText();
-                version = javaData.getVersion().getName();
+            if (javaData != null && javaData.isOnline()) {
+                javaOnline = true;
+                motd = javaData.getMotd().getClean();
+                version = javaData.getVersion().getNameClean();
                 maxPlayers = javaData.getPlayers().getMax();
                 currentOnline = javaData.getPlayers().getOnline();
-                latency = javaData.getPing();
-                javaOnline = true;
-
-                if (javaData.getPlayers().getSample() != null) {
-                    for (MCPingResponse.Player player : javaData.getPlayers().getSample()) {
-                        playerNames.add(player.getName());
-                    }
-                } else {
-                    playerNames = null;
-                }
-            } else if (bedrockData != null) {
-                motd = MCPingUtil.stripColors(bedrockData.getMotd());
-                version = bedrockData.getVersion();
-                maxPlayers = bedrockData.getMaximumPlayerCount();
-                currentOnline = bedrockData.getPlayerCount();
-                // Bedrock servers do not provide latency information
+                latency = javaData.getLatency();
                 openSlots = maxPlayers - currentOnline;
+                List<Player> javaPlayers = javaData.getPlayers().getList();
+                for (Player player : javaPlayers) {
+                    playerNames.add(player.getNameClean());
+                }
+                platform = "Java";
+            } else if (bedrockData != null && bedrockData.isOnline()) {
                 bedrockOnline = true;
+                motd = bedrockData.getMotd().getClean();
+                version = String.valueOf(bedrockData.getVersion().getProtocol());
+                maxPlayers = bedrockData.getPlayers().getMax();
+                currentOnline = bedrockData.getPlayers().getOnline();
+                latency = bedrockData.getLatency();
+                platform = "Bedrock";
             }
-        } catch (InterruptedException | ExecutionException ignored) {
-            return null;
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
 
-        return new StatusRecord(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots, playerNames);
+        return new MinecraftServerInfo(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots, playerNames, platform);
     }
 
     @Nullable
-    private MCPingResponse getJavaServerInfo() {
+    private MinecraftServerQuery getServerStatus(String apiUrl) {
         try {
-            MCPingOptions options = MCPingOptions.builder()
-                    .hostname(ip)
-                    .port(port)
-                    .timeout(TIMEOUT_MS)
-                    .build();
+            URL url = new URL(apiUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
 
-            return MCPing.getPing(options);
-        } catch (IOException ignored) {
-            return null;
-        }
-    }
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Gson gson = new Gson();
+                InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+                MinecraftServerQuery statusResponse = gson.fromJson(reader, MinecraftServerQuery.class);
+                reader.close();
 
-    @Nullable
-    private BedrockPong getBedrockServerInfo() {
-        try {
-            BedrockClient client = new BedrockClient(new InetSocketAddress("0.0.0.0", 0));
-            client.bind().join();
-            InetSocketAddress addressToPing = new InetSocketAddress(ip, port);
-            return client.ping(addressToPing, TIMEOUT_MS, TimeUnit.MILLISECONDS).get();
-        } catch (InterruptedException | ExecutionException ignored) {
-            return null;
+                return statusResponse;
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 }
