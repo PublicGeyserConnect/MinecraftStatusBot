@@ -60,7 +60,7 @@ public class MinecraftStatus {
             if (javaData != null && javaData.online) {
                 javaOnline = true;
                 motd = javaData.motd.clean;
-                version = javaData.version.name_clean;
+                version = javaData.version.name;
                 maxPlayers = javaData.players.max;
                 currentOnline = javaData.players.online;
                 latency = javaData.latency;
@@ -73,7 +73,7 @@ public class MinecraftStatus {
             } else if (bedrockData != null && bedrockData.online) {
                 bedrockOnline = true;
                 motd = bedrockData.motd.clean;
-                version = String.valueOf(bedrockData.version.protocol);
+                version = bedrockData.version.name;
                 maxPlayers = bedrockData.players.max;
                 currentOnline = bedrockData.players.online;
                 openSlots = maxPlayers - currentOnline;
