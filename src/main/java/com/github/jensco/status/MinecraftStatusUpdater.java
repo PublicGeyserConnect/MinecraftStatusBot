@@ -26,7 +26,7 @@ public class MinecraftStatusUpdater {
     }
 
     public void startUpdateLoop() {
-        executorService.scheduleWithFixedDelay(this::retrieveMessages, 0, 1, TimeUnit.MINUTES);
+        executorService.scheduleWithFixedDelay(this::retrieveMessages, 0, 5, TimeUnit.MINUTES);
     }
 
     public void retrieveMessages() {
