@@ -98,7 +98,6 @@ public class MinecraftStatus {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-                System.out.println(reader);
                 MinecraftServerQuery statusResponse = gson.fromJson(reader, MinecraftServerQuery.class);
                 reader.close();
 
