@@ -1,4 +1,4 @@
-package com.github.jensco.pojo;
+package com.github.jensco.pojo.java;
 
 public class Plugin{
     public String name;

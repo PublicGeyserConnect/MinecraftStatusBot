@@ -1,7 +1,6 @@
-package com.github.jensco.pojo;
+package com.github.jensco.pojo.bedrock;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Players {
     public int online;

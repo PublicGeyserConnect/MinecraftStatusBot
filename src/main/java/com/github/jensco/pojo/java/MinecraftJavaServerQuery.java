@@ -1,8 +1,8 @@
-package com.github.jensco.pojo;
+package com.github.jensco.pojo.java;
 
 import java.util.ArrayList;
 
-public class MinecraftServerQuery {
+public class MinecraftJavaServerQuery {
     public boolean online;
     public String host;
     public int port;

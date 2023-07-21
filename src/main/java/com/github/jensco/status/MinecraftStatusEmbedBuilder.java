@@ -24,16 +24,8 @@ public class MinecraftStatusEmbedBuilder {
 
         embedBuilder.setTitle("Status for " + serverData.serverName() + "\n(" + serverData.serverAddress() + ")")
                 .addField("Server is", isOnline ? ":green_circle: Online" : ":red_circle: Offline", false)
-                .addField("MOTD", motd != null ? motd : "Unable to retrieve server information", true);
-
-        // Check if the version contains only numbers (protocol)
-        if (version.matches("\\d+")) {
-            embedBuilder.addField("Protocol", version, true);
-        } else {
-            embedBuilder.addField("Version", version, true);
-        }
-
-        embedBuilder
+                .addField("MOTD", motd != null ? motd : "Unable to retrieve server information", true)
+                .addField("Version", version, true)
                 .addField("Maximum Players", String.valueOf(maxPlayers), true)
                 .addField("Currently Online", String.valueOf(currentPlayers), true)
                 .addField("Latency", latency > 0 ? latency + " ms" : "Unavailable", true)

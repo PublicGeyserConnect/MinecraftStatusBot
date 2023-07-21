@@ -22,7 +22,7 @@ public class PlayerListUpdater {
     }
 
     public void startUpdateLoop() {
-        executorService.scheduleWithFixedDelay(this::retrieveMessages, 2, 5, TimeUnit.MINUTES);
+        executorService.scheduleWithFixedDelay(this::retrieveMessages, 2, 7, TimeUnit.MINUTES);
     }
 
     public void retrieveMessages() {

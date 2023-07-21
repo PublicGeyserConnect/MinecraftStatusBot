@@ -1,4 +1,4 @@
-package com.github.jensco.pojo;
+package com.github.jensco.pojo.bedrock;
 
 public class Player {
     private String uuid;
