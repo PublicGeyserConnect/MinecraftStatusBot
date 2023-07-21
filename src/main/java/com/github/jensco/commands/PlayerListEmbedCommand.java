@@ -2,8 +2,9 @@ package com.github.jensco.commands;
 
 import com.github.jensco.Bot;
 import com.github.jensco.playerlist.PlayerListEmbedBuilder;
+import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.records.PlayerListDataRecord;
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import com.github.jensco.status.MinecraftStatus;
 import com.github.jensco.util.MessageHelper;
 import com.jagrosh.jdautilities.command.SlashCommand;
@@ -52,7 +53,7 @@ public class PlayerListEmbedCommand extends SlashCommand {
         protected void execute(@NotNull SlashCommandEvent event) {
             String serverName = event.optString("displayname");
             PlayerListDataRecord playerListInfo = Bot.storageManager.getPlayerListData(event.getGuild().getId(), serverName);
-            ServerDataRecord serverInfo = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
+            ServerInfoFromDatabase serverInfo = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
             event.deferReply().queue(interactionHook -> {
                 if (serverInfo == null) {
@@ -86,8 +87,8 @@ public class PlayerListEmbedCommand extends SlashCommand {
         }
 
         @NotNull
-        private static MessageEmbed handle(@NotNull ServerDataRecord info) {
-            MinecraftStatus data = new MinecraftStatus(info.serverAddress(), info.serverPort());
+        private static MessageEmbed handle(@NotNull ServerInfoFromDatabase info) {
+            MinecraftServerInfo data = new MinecraftStatus(info.serverAddress(), info.serverPort(), info.platform()).getServerInfo();
             // create server status embed
             return PlayerListEmbedBuilder.playerListEmbed(
                     info.serverAddress(),

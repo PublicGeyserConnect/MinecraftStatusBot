@@ -1,6 +1,7 @@
 package com.github.jensco.status;
 
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.MinecraftServerInfo;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.jetbrains.annotations.NotNull;
@@ -10,21 +11,21 @@ import java.time.Instant;
 public class MinecraftStatusEmbedBuilder {
 
     @NotNull
-    public static MessageEmbed statusEmbed(ServerDataRecord serverData, @NotNull MinecraftStatus statusData) {
+    public static MessageEmbed sendStatusEmbed(@NotNull ServerInfoFromDatabase serverData, @NotNull MinecraftServerInfo info) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        boolean isOnline = statusData.getServerInfo().serverStatus();
-        String motd = statusData.getServerInfo().motd();
-        long latency = statusData.getServerInfo().latency();
-        String version = statusData.getServerInfo().version();
-        int maxPlayers = statusData.getServerInfo().maxPlayers();
-        int currentPlayers = statusData.getServerInfo().currentOnline();
-        int openSlots = statusData.getServerInfo().openSlots();
+        boolean isOnline = info.serverStatus();
+        String motd = info.motd();
+        long latency = info.latency();
+        String version = info.version();
+        int maxPlayers = info.maxPlayers();
+        int currentPlayers = info.currentOnline();
+        int openSlots = info.openSlots();
 
         embedBuilder.setTitle("Status for " + serverData.serverName() + "\n(" + serverData.serverAddress() + ")")
                 .addField("Server is", isOnline ? ":green_circle: Online" : ":red_circle: Offline", false)
                 .addField("MOTD", motd != null ? motd : "Unable to retrieve server information", true)
-                .addField("Version", version != null ? version : "Unavailable", true)
+                .addField("Version", version, true)
                 .addField("Maximum Players", String.valueOf(maxPlayers), true)
                 .addField("Currently Online", String.valueOf(currentPlayers), true)
                 .addField("Latency", latency > 0 ? latency + " ms" : "Unavailable", true)

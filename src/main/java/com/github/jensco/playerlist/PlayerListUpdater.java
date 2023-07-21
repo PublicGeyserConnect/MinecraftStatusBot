@@ -1,8 +1,9 @@
 package com.github.jensco.playerlist;
 
 import com.github.jensco.Bot;
+import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.records.PlayerListDataRecord;
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import com.github.jensco.status.MinecraftStatus;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -21,7 +22,7 @@ public class PlayerListUpdater {
     }
 
     public void startUpdateLoop() {
-        executorService.scheduleWithFixedDelay(this::retrieveMessages, 2, 5, TimeUnit.MINUTES);
+        executorService.scheduleWithFixedDelay(this::retrieveMessages, 2, 7, TimeUnit.MINUTES);
     }
 
     public void retrieveMessages() {
@@ -59,9 +60,9 @@ public class PlayerListUpdater {
     private void updateMessageEmbed(Message message, String serverName, String guildID) {
         if (message != null) {
             try {
-                ServerDataRecord record = Bot.storageManager.getServerInfo(serverName, guildID);
-                MinecraftStatus data = new MinecraftStatus(record.serverAddress(), record.serverPort());
-                MessageEmbed updatedEmbed = PlayerListEmbedBuilder.playerListEmbed(record.serverAddress(), data);
+                ServerInfoFromDatabase record = Bot.storageManager.getServerInfo(serverName, guildID);
+                MinecraftServerInfo info = new MinecraftStatus(record.serverAddress(), record.serverPort(), record.platform()).getServerInfo();
+                MessageEmbed updatedEmbed = PlayerListEmbedBuilder.playerListEmbed(record.serverAddress(), info);
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
                         },
