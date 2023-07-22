@@ -1,7 +1,6 @@
 package com.github.jensco.playerlist;
 
 import com.github.jensco.records.MinecraftServerInfo;
-import com.github.jensco.status.MinecraftStatus;
 import com.github.jensco.util.BotColors;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;

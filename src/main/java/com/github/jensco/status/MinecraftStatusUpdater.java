@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static com.github.jensco.Bot.LOGGER;
-
 public class MinecraftStatusUpdater {
     private final ScheduledExecutorService executorService;
     private final Map<String, Integer> offlineCountMap = new ConcurrentHashMap<>();
@@ -26,7 +24,7 @@ public class MinecraftStatusUpdater {
     }
 
     public void startUpdateLoop() {
-        executorService.scheduleWithFixedDelay(this::retrieveMessages, 1, 5, TimeUnit.MINUTES);
+        executorService.scheduleWithFixedDelay(this::retrieveMessages, 1, 10, TimeUnit.SECONDS);
     }
 
     public void retrieveMessages() {
@@ -35,7 +33,7 @@ public class MinecraftStatusUpdater {
         CompletableFuture.allOf(serverInfoFromDatabaseList.stream()
                         .map(serverDataRecord -> CompletableFuture.supplyAsync(() -> retrieveAndUpdateMessage(serverDataRecord))).toArray(CompletableFuture[]::new))
                 .exceptionally(ex -> {
-                    LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
+                    Bot.LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
                     return null;
                 })
                 .join();
@@ -52,7 +50,7 @@ public class MinecraftStatusUpdater {
                     message -> updateMessageEmbed(serverInfoFromDatabase, message, channel),
                     exception -> {
                         if (Bot.storageManager.deactivateServerByMessageId(serverInfoFromDatabase.guildId(), messageId)) {
-                            LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
+                            Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
                         }
                     });
         }
@@ -76,10 +74,10 @@ public class MinecraftStatusUpdater {
                                 offlineCountMap.remove(serverData.serverName());
                             }
                         },
-                        exception -> LOGGER.info("Failed to update message with ID " + message.getId())
+                        exception -> Bot.LOGGER.info("Failed to update message with ID " + message.getId())
                 );
             } catch (Exception e) {
-                LOGGER.info("Failed to update message with ID " + message.getId());
+                Bot.LOGGER.info("Failed to update message with ID " + message.getId());
             }
         }
     }

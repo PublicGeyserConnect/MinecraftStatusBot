@@ -2,6 +2,7 @@ package com.github.jensco;
 
 import com.github.jensco.listeners.RconListener;
 import com.github.jensco.listeners.ShutdownHandler;
+import com.github.jensco.logger.UtilLogger;
 import com.github.jensco.playerlist.PlayerListUpdater;
 import com.github.jensco.records.RconLoginRecord;
 import com.github.jensco.status.MinecraftStatusUpdater;
@@ -24,7 +25,6 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
@@ -44,7 +44,7 @@ public class Bot {
     public static AbstractStorageManager storageManager;
     private static ShardManager shardManager;
     private static ScheduledExecutorService generalThreadPool;
-    public static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
+    public static UtilLogger LOGGER = new UtilLogger(LoggerFactory.getLogger(Bot.class));
     public static Cache<String, RconLoginRecord> rconDataCache;
 
     public static void main(String[] args) throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
