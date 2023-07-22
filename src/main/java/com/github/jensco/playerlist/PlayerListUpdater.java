@@ -12,8 +12,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static com.github.jensco.Bot.LOGGER;
-
 public class PlayerListUpdater {
     private final ScheduledExecutorService executorService;
 
@@ -34,7 +32,7 @@ public class PlayerListUpdater {
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .exceptionally(ex -> {
-                    LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
+                    Bot.LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
                     return null;
                 })
                 .join();
@@ -50,7 +48,7 @@ public class PlayerListUpdater {
                     message -> updateMessageEmbed(message, playerListDataRecord.serverName(), playerListDataRecord.guildID()),
                     exception -> {
                         if (Bot.storageManager.removePlayerListByMessageId(playerListDataRecord.guildID(), messageId)) {
-                            LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
+                            Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
                         }
                     });
         }
@@ -66,10 +64,10 @@ public class PlayerListUpdater {
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
                         },
-                        exception -> LOGGER.info("Failed to update message with ID " + message.getId())
+                        exception -> Bot.LOGGER.info("Failed to update message with ID " + message.getId())
                 );
             } catch (Exception e) {
-                LOGGER.info("Failed to update message with ID " + message.getId());
+                Bot.LOGGER.info("Failed to update message with ID " + message.getId());
             }
         }
     }

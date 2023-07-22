@@ -17,6 +17,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
+    testImplementation("ch.qos.logback:logback-classic:1.4.8")
+
     implementation("net.dv8tion:JDA:5.0.0-beta.10")
     implementation("pw.chew:jda-chewtils:2.0-SNAPSHOT")
 
