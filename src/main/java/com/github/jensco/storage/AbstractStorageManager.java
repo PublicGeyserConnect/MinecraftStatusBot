@@ -70,4 +70,6 @@ public abstract class AbstractStorageManager {
     public abstract boolean isChannelIdPresent(String channelId);
 
     public abstract void removeRconSettings(String guildId, String serverName);
+
+    public abstract void removeAllRecordsByGuildId(String guildId);
 }
