@@ -1,5 +1,6 @@
 package com.github.jensco;
 
+import com.github.jensco.listeners.BotHandler;
 import com.github.jensco.listeners.RconListener;
 import com.github.jensco.listeners.ShutdownHandler;
 import com.github.jensco.logger.UtilLogger;
@@ -101,7 +102,8 @@ public class Bot {
                     .addEventListeners(new EventWaiter(),
                             client.build(),
                             new ShutdownHandler(),
-                            new RconListener()
+                            new RconListener(),
+                            new BotHandler()
                     )
                     .build();
 

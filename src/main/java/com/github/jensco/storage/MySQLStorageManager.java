@@ -637,4 +637,43 @@ public class MySQLStorageManager extends AbstractStorageManager {
             e.printStackTrace();
         }
     }
+
+   @Override
+    public void removeAllRecordsByGuildId(String guildId) {
+        try (Connection connection = dataSource.getConnection()) {
+            // Remove records from 'servers' table
+            try (PreparedStatement deleteServerStatement = connection.prepareStatement(
+                    "DELETE FROM servers WHERE guildid = ?"
+            )) {
+                deleteServerStatement.setString(1, guildId);
+                deleteServerStatement.executeUpdate();
+            }
+
+            // Remove records from 'notification' table
+            try (PreparedStatement deleteNotificationStatement = connection.prepareStatement(
+                    "DELETE FROM notification WHERE guildid = ?"
+            )) {
+                deleteNotificationStatement.setString(1, guildId);
+                deleteNotificationStatement.executeUpdate();
+            }
+
+            // Remove records from 'playerlist' table
+            try (PreparedStatement deletePlayerListStatement = connection.prepareStatement(
+                    "DELETE FROM playerlist WHERE guildid = ?"
+            )) {
+                deletePlayerListStatement.setString(1, guildId);
+                deletePlayerListStatement.executeUpdate();
+            }
+
+            // Remove records from 'rcon' table
+            try (PreparedStatement deleteRconStatement = connection.prepareStatement(
+                    "DELETE FROM rcon WHERE guildid = ?"
+            )) {
+                deleteRconStatement.setString(1, guildId);
+                deleteRconStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
