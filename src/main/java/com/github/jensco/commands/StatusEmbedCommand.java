@@ -1,7 +1,7 @@
 package com.github.jensco.commands;
 
 import com.github.jensco.Bot;
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import com.github.jensco.status.MinecraftStatus;
 import com.github.jensco.status.MinecraftStatusEmbedBuilder;
 import com.github.jensco.util.MessageHelper;
@@ -37,7 +37,7 @@ public class StatusEmbedCommand extends SlashCommand {
         public EnableMinecraftStatusEmbedSubCommand() {
             this.name = "enable";
             this.help = "Adds the status embed in the channel.";
-            this.cooldown = 20;
+            this.cooldown = 5;
             this.userPermissions = new Permission[]{
                     Permission.MANAGE_SERVER
             };
@@ -51,7 +51,7 @@ public class StatusEmbedCommand extends SlashCommand {
             String serverName = event.optString("displayname");
 
             event.deferReply().queue(interactionHook -> {
-                ServerDataRecord info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
+                ServerInfoFromDatabase info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
                 if (info == null) {
                     interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "The server you tried to enable was not found."))
@@ -86,7 +86,7 @@ public class StatusEmbedCommand extends SlashCommand {
             public DisableEmbedSubCommand() {
                 this.name = "disable";
                 this.help = "Disables the embed.";
-                this.cooldown = 20;
+                this.cooldown = 5;
                 this.userPermissions = new Permission[]{
                         Permission.MANAGE_SERVER
                 };
@@ -100,7 +100,7 @@ public class StatusEmbedCommand extends SlashCommand {
                 String serverName = event.optString("displayname");
                 Checks.notNull(event.getGuild(), "server");
                 event.deferReply().queue(interactionHook -> {
-                    ServerDataRecord info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
+                    ServerInfoFromDatabase info = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
                     if (info == null) {
                         interactionHook.editOriginalEmbeds(MessageHelper.errorResponse(null, "Status Embed Settings", "The server you are looking for was not found in our database")).queue();
@@ -134,8 +134,8 @@ public class StatusEmbedCommand extends SlashCommand {
         }
 
     @NotNull
-    private static MessageEmbed handle(@NotNull ServerDataRecord info) {
+    private static MessageEmbed handle(@NotNull ServerInfoFromDatabase info) {
         // create server status embed
-        return MinecraftStatusEmbedBuilder.statusEmbed(info, new MinecraftStatus(info.serverAddress(), info.serverPort()));
+        return MinecraftStatusEmbedBuilder.sendStatusEmbed(info, new MinecraftStatus(info.serverAddress(), info.serverPort(), info.platform()).getServerInfo());
     }
 }

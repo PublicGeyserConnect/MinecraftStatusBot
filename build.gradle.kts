@@ -9,7 +9,6 @@ repositories {
     mavenCentral()
 
     maven("https://jitpack.io")
-    maven("https://repo.opencollab.dev/main")
     maven("https://m2.chew.pro/snapshots/")
     maven("https://repo.rtm516.co.uk/main/")
 }
@@ -18,15 +17,13 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
+    testImplementation("ch.qos.logback:logback-classic:1.4.8")
+
     implementation("net.dv8tion:JDA:5.0.0-beta.10")
     implementation("pw.chew:jda-chewtils:2.0-SNAPSHOT")
 
     implementation("ch.qos.logback", "logback-classic", "1.2.10")
-
     implementation("nl.vv32.rcon:rcon:1.2.0")
-
-    // Web requests and json
-    implementation("org.json:json:20230227")
 
     implementation("org.reflections:reflections:0.10.2")
 
@@ -37,7 +34,7 @@ dependencies {
 
     // Pinging java and bedrock servers
     implementation("com.github.rtm516:minecraft-server-ping:c61c496104")
-    implementation("com.nukkitx.protocol:bedrock-common:2.9.17-SNAPSHOT")
+
 }
 
 tasks {

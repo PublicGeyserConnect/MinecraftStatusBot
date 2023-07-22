@@ -1,6 +1,6 @@
 package com.github.jensco.playerlist;
 
-import com.github.jensco.status.MinecraftStatus;
+import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.util.BotColors;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -13,17 +13,17 @@ import java.util.List;
 public class PlayerListEmbedBuilder {
 
     @NotNull
-    public static MessageEmbed playerListEmbed(String serverName, @NotNull MinecraftStatus data) {
+    public static MessageEmbed playerListEmbed(String serverName, @NotNull MinecraftServerInfo info) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        List<String> playerNames = data.getServerInfo().playerNames();
+        List<String> playerNames = info.playerNames();
         if (playerNames == null) {
             embedBuilder.setTitle("Player List Unavailable")
-                    .setDescription("The server does not expose the player list.")
-                    .setColor(BotColors.FAILURE.getColor());
-        } else if (playerNames.isEmpty()) {
-            embedBuilder.setTitle("No Players Online")
-                    .setDescription("There are no players currently online.")
+                    .setDescription("There are no players online.")
                     .setColor(BotColors.WARNING.getColor());
+        } else if (playerNames.isEmpty()) {
+            embedBuilder.setTitle("Server Not Reachable")
+                    .setDescription("The server is currently not reachable")
+                    .setColor(BotColors.FAILURE.getColor());
         } else {
             StringBuilder playerListBuilder = new StringBuilder();
             for (String playerName : playerNames) {

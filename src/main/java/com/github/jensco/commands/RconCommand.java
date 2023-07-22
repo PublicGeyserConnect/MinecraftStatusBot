@@ -3,7 +3,7 @@ package com.github.jensco.commands;
 import com.github.jensco.Bot;
 import com.github.jensco.records.RconLoginRecord;
 import com.github.jensco.records.RconRecord;
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import com.github.jensco.util.MessageHelper;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
@@ -62,7 +62,7 @@ public class RconCommand extends SlashCommand {
 
             event.deferReply().queue(interactionHook -> {
                 RconRecord rconData = Bot.storageManager.getRconData(event.getGuild().getId(), serverName);
-                ServerDataRecord serverData = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
+                ServerInfoFromDatabase serverData = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
 
                 // port cant be bigger then 65535
                 if (rconPort > 65534) {
@@ -125,7 +125,7 @@ public class RconCommand extends SlashCommand {
             Checks.notNull(event.getGuild(), "server");
 
             event.deferReply().queue(interactionHook -> {
-                ServerDataRecord serverData = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
+                ServerInfoFromDatabase serverData = Bot.storageManager.getServerInfo(serverName, event.getGuild().getId());
                 RconRecord rconData = Bot.storageManager.getRconData(event.getGuild().getId(), serverName);
 
                 if (serverData == null) {

@@ -1,19 +1,19 @@
 package com.github.jensco.status;
 
 import com.github.jensco.Bot;
+import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.records.NotificationRecord;
-import com.github.jensco.records.ServerDataRecord;
+import com.github.jensco.records.ServerInfoFromDatabase;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-
-import static com.github.jensco.Bot.LOGGER;
 
 public class MinecraftStatusUpdater {
     private final ScheduledExecutorService executorService;
@@ -24,46 +24,48 @@ public class MinecraftStatusUpdater {
     }
 
     public void startUpdateLoop() {
-        executorService.scheduleWithFixedDelay(this::retrieveMessages, 0, 5, TimeUnit.MINUTES);
+        executorService.scheduleWithFixedDelay(this::retrieveMessages, 1, 10, TimeUnit.SECONDS);
     }
 
     public void retrieveMessages() {
-        List<ServerDataRecord> serverDataRecordList = Bot.storageManager.getAllActiveServers();
+        List<ServerInfoFromDatabase> serverInfoFromDatabaseList = Bot.storageManager.getAllActiveServers();
 
-        CompletableFuture.allOf(serverDataRecordList.stream()
+        CompletableFuture.allOf(serverInfoFromDatabaseList.stream()
                         .map(serverDataRecord -> CompletableFuture.supplyAsync(() -> retrieveAndUpdateMessage(serverDataRecord))).toArray(CompletableFuture[]::new))
                 .exceptionally(ex -> {
-                    LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
+                    Bot.LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
                     return null;
                 })
                 .join();
     }
 
-    private Void retrieveAndUpdateMessage(ServerDataRecord serverDataRecord) {
-        String channelId = serverDataRecord.channelID();
-        String messageId = serverDataRecord.messageID();
+    @Nullable
+    private Void retrieveAndUpdateMessage(@NotNull ServerInfoFromDatabase serverInfoFromDatabase) {
+        String channelId = serverInfoFromDatabase.channelID();
+        String messageId = serverInfoFromDatabase.messageID();
 
         TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
         if (channel != null) {
             channel.retrieveMessageById(messageId).queue(
-                    message -> updateMessageEmbed(serverDataRecord, message, channel),
+                    message -> updateMessageEmbed(serverInfoFromDatabase, message, channel),
                     exception -> {
-                        if (Bot.storageManager.deactivateServerByMessageId(serverDataRecord.guildId(), messageId)) {
-                            LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
+                        if (Bot.storageManager.deactivateServerByMessageId(serverInfoFromDatabase.guildId(), messageId)) {
+                            Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database");
                         }
                     });
         }
         return null;
     }
 
-    private void updateMessageEmbed(ServerDataRecord serverData, Message message, TextChannel channel) {
+    private void updateMessageEmbed(ServerInfoFromDatabase serverData, Message message, TextChannel channel) {
         if (message != null) {
             try {
-                MinecraftStatus statusData = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort());
-                MessageEmbed updatedEmbed = MinecraftStatusEmbedBuilder.statusEmbed(serverData, statusData);
+
+                MinecraftServerInfo info = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort(), serverData.platform()).getServerInfo();
+                MessageEmbed updatedEmbed = MinecraftStatusEmbedBuilder.sendStatusEmbed(serverData, info);
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
-                            if (!statusData.getServerInfo().serverStatus()) {
+                            if (!info.serverStatus()) {
                                 NotificationRecord notifyRole = Bot.storageManager.getNotifiedData(serverData.guildId());
                                 if (notifyRole != null && notifyRole.active()) {
                                     serverOfflineWarningMessage(channel, serverData, notifyRole.role());
@@ -72,15 +74,15 @@ public class MinecraftStatusUpdater {
                                 offlineCountMap.remove(serverData.serverName());
                             }
                         },
-                        exception -> LOGGER.info("Failed to update message with ID " + message.getId())
+                        exception -> Bot.LOGGER.info("Failed to update message with ID " + message.getId())
                 );
             } catch (Exception e) {
-                LOGGER.info("Failed to update message with ID " + message.getId());
+                Bot.LOGGER.info("Failed to update message with ID " + message.getId());
             }
         }
     }
 
-    private void serverOfflineWarningMessage(TextChannel channel, @NotNull ServerDataRecord data, String roleId) {
+    private void serverOfflineWarningMessage(TextChannel channel, @NotNull ServerInfoFromDatabase data, String roleId) {
         int offlineCount = offlineCountMap.getOrDefault(data.serverName(), 0); // Get the offline count for the server
         offlineCount++; // Increment the offline count
 
