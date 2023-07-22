@@ -86,7 +86,10 @@ public class Bot {
                             GatewayIntent.GUILD_MEMBERS,
                             GatewayIntent.GUILD_PRESENCES,
                             GatewayIntent.MESSAGE_CONTENT,
-                            GatewayIntent.GUILD_MESSAGES)
+                            GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.GUILD_VOICE_STATES,
+                            GatewayIntent.GUILD_EMOJIS_AND_STICKERS,
+                            GatewayIntent.SCHEDULED_EVENTS)
                     .enableIntents(GatewayIntent.GUILD_MEMBERS)
                     .enableIntents(GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT)
                     .setShardsTotal(Integer.parseInt(PropertiesManager.getTotalShards())) // Total number of shards
@@ -95,6 +98,7 @@ public class Bot {
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableCache(CacheFlag.ACTIVITY)
                     .enableCache(CacheFlag.ROLE_TAGS)
+                    .enableCache(CacheFlag.SCHEDULED_EVENTS)
                     .setEnableShutdownHook(true)
                     .setStatus(OnlineStatus.ONLINE)
                     .setActivity(Activity.playing("Booting..."))
