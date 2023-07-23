@@ -23,7 +23,7 @@ public class PingCommand extends SlashCommand {
         this.cooldown = 10;
         this.options = Arrays.asList(
                 new OptionData(OptionType.STRING, "address", "The IP address of the server", true),
-                new OptionData(OptionType.INTEGER, "port", "The port number of the server", true)
+                new OptionData(OptionType.INTEGER, "port", "The port number of the server", false)
         );
     }
 
@@ -33,7 +33,7 @@ public class PingCommand extends SlashCommand {
         InteractionHook interactionHook = event.deferReply().complete();
 
         String ip = event.optString("address");
-        int port = Objects.requireNonNull(event.getOption("port")).getAsInt();
+        int port = Integer.parseInt(event.optString("port", String.valueOf(25565)));
         interactionHook.editOriginalEmbeds(handle(ip, port)).queue();
     }
     @NotNull
