@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 
-public class MinecraftStatusEmbedBuilder {
+public class StatusEmbedBuilder {
 
     @NotNull
     public static MessageEmbed sendStatusEmbed(@NotNull ServerInfoFromDatabase serverData, @NotNull MinecraftServerInfo info) {
@@ -25,7 +25,7 @@ public class MinecraftStatusEmbedBuilder {
         embedBuilder.setTitle("Status for " + serverData.serverName() + "\n(" + serverData.serverAddress() + ")")
                 .addField("Server is", isOnline ? ":green_circle: Online" : ":red_circle: Offline", false)
                 .addField("MOTD", motd != null ? motd : "Unable to retrieve server information", true)
-                .addField("Version", version, true)
+                .addField("Version", version != null ? version : "Version information unavailable", true)
                 .addField("Maximum Players", String.valueOf(maxPlayers), true)
                 .addField("Currently Online", String.valueOf(currentPlayers), true)
                 .addField("Latency", latency > 0 ? latency + " ms" : "Unavailable", true)
