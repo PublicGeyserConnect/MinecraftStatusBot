@@ -20,6 +20,7 @@ public class PingCommand extends SlashCommand {
         this.name = "ping";
         this.help = "Ping a minecraft server";
         this.guildOnly = false;
+        this.cooldown = 10;
         this.options = Arrays.asList(
                 new OptionData(OptionType.STRING, "address", "The IP address of the server", true),
                 new OptionData(OptionType.INTEGER, "port", "The port number of the server", true)
