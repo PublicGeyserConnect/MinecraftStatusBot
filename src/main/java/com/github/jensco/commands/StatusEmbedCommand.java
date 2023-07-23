@@ -3,7 +3,7 @@ package com.github.jensco.commands;
 import com.github.jensco.Bot;
 import com.github.jensco.records.ServerInfoFromDatabase;
 import com.github.jensco.status.MinecraftStatus;
-import com.github.jensco.status.MinecraftStatusEmbedBuilder;
+import com.github.jensco.status.StatusEmbedBuilder;
 import com.github.jensco.util.MessageHelper;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.command.SlashCommandEvent;
@@ -136,6 +136,6 @@ public class StatusEmbedCommand extends SlashCommand {
     @NotNull
     private static MessageEmbed handle(@NotNull ServerInfoFromDatabase info) {
         // create server status embed
-        return MinecraftStatusEmbedBuilder.sendStatusEmbed(info, new MinecraftStatus(info.serverAddress(), info.serverPort(), info.platform()).getServerInfo());
+        return StatusEmbedBuilder.sendStatusEmbed(info, new MinecraftStatus(info.serverAddress(), info.serverPort(), info.platform()).getServerInfo());
     }
 }

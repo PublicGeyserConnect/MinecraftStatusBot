@@ -1,4 +1,4 @@
-package com.github.jensco.playerlist;
+package com.github.jensco.status;
 
 import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.util.BotColors;

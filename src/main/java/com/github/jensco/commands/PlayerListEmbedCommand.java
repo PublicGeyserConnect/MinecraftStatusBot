@@ -1,7 +1,7 @@
 package com.github.jensco.commands;
 
 import com.github.jensco.Bot;
-import com.github.jensco.playerlist.PlayerListEmbedBuilder;
+import com.github.jensco.status.PlayerListEmbedBuilder;
 import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.records.PlayerListDataRecord;
 import com.github.jensco.records.ServerInfoFromDatabase;

@@ -4,9 +4,8 @@ import com.github.jensco.listeners.BotHandler;
 import com.github.jensco.listeners.RconListener;
 import com.github.jensco.listeners.ShutdownHandler;
 import com.github.jensco.logger.UtilLogger;
-import com.github.jensco.playerlist.PlayerListUpdater;
 import com.github.jensco.records.RconLoginRecord;
-import com.github.jensco.status.MinecraftStatusUpdater;
+import com.github.jensco.status.EmbedUpdater;
 import com.github.jensco.storage.AbstractStorageManager;
 import com.github.jensco.storage.StorageType;
 import com.github.jensco.util.PropertiesManager;
@@ -124,10 +123,8 @@ public class Bot {
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .build();
 
-        MinecraftStatusUpdater statusUpdater = new MinecraftStatusUpdater();
-        PlayerListUpdater playerListUpdater = new PlayerListUpdater();
+        EmbedUpdater statusUpdater = new EmbedUpdater();
         statusUpdater.startUpdateLoop();
-        playerListUpdater.startUpdateLoop();
 
         LOGGER.info("MinecraftStatusBot has been started");
     }
