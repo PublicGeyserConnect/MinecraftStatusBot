@@ -23,28 +23,22 @@ public class MinecraftStatus {
 
     private final String serverAddress;
     private final int serverPort;
-    private final String platform;
 
-    public MinecraftStatus(String serverAddress, int serverPort, String platform) {
+    public MinecraftStatus(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        this.platform = platform;
     }
 
-    public MinecraftServerInfo getServerInfo() {
-        CompletableFuture<MinecraftJavaServerQuery> javaDataFuture = null;
-        CompletableFuture<MinecraftBedrockServerQuery> bedrockDataFuture = null;
+    public MinecraftServerInfo getServerInfo(String platform) {
+        CompletableFuture<?> dataFuture = null;
 
-        if (platform == null || platform.equals("Java")) {
-            javaDataFuture = CompletableFuture.supplyAsync(() -> getJavaServerStatus(JAVA_API_ENDPOINT + serverAddress + ":" + serverPort));
+        if (platform == null || platform.equalsIgnoreCase("Java")) {
+            dataFuture = CompletableFuture.supplyAsync(() -> getServerStatus(JAVA_API_ENDPOINT + serverAddress + ":" + serverPort, MinecraftJavaServerQuery.class));
+        } else if (platform.equalsIgnoreCase("Bedrock")) {
+            dataFuture = CompletableFuture.supplyAsync(() -> getServerStatus(BEDROCK_API_ENDPOINT + serverAddress + ":" + serverPort, MinecraftBedrockServerQuery.class));
         }
 
-        if (platform == null || platform.equals("Bedrock")) {
-            bedrockDataFuture = CompletableFuture.supplyAsync(() -> getBedrockServerStatus(BEDROCK_API_ENDPOINT + serverAddress + ":" + serverPort));
-        }
-
-        boolean javaOnline = false;
-        boolean bedrockOnline = false;
+        boolean isOnline = false;
         String motd = null;
         String version = null;
         int maxPlayers = 0;
@@ -52,14 +46,12 @@ public class MinecraftStatus {
         long latency = 0;
         int openSlots = 0;
         List<String> playerNames = new ArrayList<>();
-        String platform = null;
 
         try {
-            MinecraftJavaServerQuery javaData = (javaDataFuture != null) ? javaDataFuture.get() : null;
-            MinecraftBedrockServerQuery bedrockData = (bedrockDataFuture != null) ? bedrockDataFuture.get() : null;
+            Object data = (dataFuture != null) ? dataFuture.get() : null;
 
-            if (javaData != null && javaData.online) {
-                javaOnline = true;
+            if (data instanceof MinecraftJavaServerQuery javaData && ((MinecraftJavaServerQuery) data).online) {
+                isOnline = true;
                 motd = javaData.motd.clean;
                 version = javaData.version.name_clean;
                 maxPlayers = javaData.players.max;
@@ -70,25 +62,23 @@ public class MinecraftStatus {
                 for (Player player : javaPlayers) {
                     playerNames.add(player.name_clean);
                 }
-                platform = "Java";
-            } else if (bedrockData != null && bedrockData.online) {
-                bedrockOnline = true;
+            } else if (data instanceof MinecraftBedrockServerQuery bedrockData && ((MinecraftBedrockServerQuery) data).online) {
+                isOnline = true;
                 motd = bedrockData.motd.clean;
                 version = bedrockData.version.name;
                 maxPlayers = bedrockData.players.max;
                 currentOnline = bedrockData.players.online;
                 openSlots = maxPlayers - currentOnline;
                 latency = bedrockData.latency;
-                platform = "Bedrock";
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-        return new MinecraftServerInfo(javaOnline || bedrockOnline, motd, version, maxPlayers, currentOnline, latency, openSlots, playerNames, platform);
+        return new MinecraftServerInfo(isOnline, motd, version, maxPlayers, currentOnline, latency, openSlots, playerNames, platform);
     }
 
     @Nullable
-    private MinecraftJavaServerQuery getJavaServerStatus(String apiUrl) {
+    private <T> T getServerStatus(String apiUrl, Class<T> responseType) {
         try {
             URL url = new URL(apiUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -97,35 +87,9 @@ public class MinecraftStatus {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 Gson gson = new Gson();
-                InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-                MinecraftJavaServerQuery statusResponse = gson.fromJson(reader, MinecraftJavaServerQuery.class);
-                reader.close();
-
-                return statusResponse;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    @Nullable
-    private MinecraftBedrockServerQuery getBedrockServerStatus(String apiUrl) {
-        try {
-            URL url = new URL(apiUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                Gson gson = new Gson();
-                InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-                MinecraftBedrockServerQuery statusResponse = gson.fromJson(reader, MinecraftBedrockServerQuery.class);
-                reader.close();
-
-                return statusResponse;
+                try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+                    return gson.fromJson(reader, responseType);
+                }
             } else {
                 return null;
             }

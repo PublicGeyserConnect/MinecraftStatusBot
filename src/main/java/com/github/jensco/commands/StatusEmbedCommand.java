@@ -136,6 +136,6 @@ public class StatusEmbedCommand extends SlashCommand {
     @NotNull
     private static MessageEmbed handle(@NotNull ServerInfoFromDatabase info) {
         // create server status embed
-        return StatusEmbedBuilder.sendStatusEmbed(info, new MinecraftStatus(info.serverAddress(), info.serverPort(), info.platform()).getServerInfo());
+        return StatusEmbedBuilder.sendStatusEmbed(info, new MinecraftStatus(info.serverAddress(), info.serverPort()).getServerInfo(info.platform()));
     }
 }
