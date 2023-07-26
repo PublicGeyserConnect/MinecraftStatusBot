@@ -30,7 +30,7 @@ public class EmbedUpdater {
             List<PlayerListDataRecord> playerListDataRecordList = Bot.storageManager.getAllActivePlayers();
 
             for (ServerInfoFromDatabase serverDataRecord : serverInfoFromDatabaseList) {
-                CompletableFuture.supplyAsync(() -> getStatusEmbed(serverDataRecord), executorService)
+                CompletableFuture.supplyAsync(() -> processEmbedRecord(serverDataRecord), executorService)
                         .thenRun(this::delayForSeconds)
                         .exceptionally(ex -> {
                             Bot.LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
@@ -40,7 +40,7 @@ public class EmbedUpdater {
             }
 
             for (PlayerListDataRecord playerlist : playerListDataRecordList) {
-                CompletableFuture.supplyAsync(() -> getPlayerListEmbed(playerlist), executorService)
+                CompletableFuture.supplyAsync(() -> processEmbedRecord(playerlist), executorService)
                         .thenRun(this::delayForSeconds)
                         .exceptionally(ex -> {
                             Bot.LOGGER.error("Exception occurred while retrieving messages: " + ex.getMessage());
@@ -52,46 +52,54 @@ public class EmbedUpdater {
     }
 
     @Nullable
-    private Void getPlayerListEmbed(@NotNull PlayerListDataRecord playerList) {
-        String channelId = playerList.channelID();
-        String messageId = playerList.messageID();
+    private <T> Void processEmbedRecord(@NotNull T record) {
+        String channelId;
+        String messageId;
+
+        if (record instanceof PlayerListDataRecord playerList) {
+            channelId = playerList.channelID();
+            messageId = playerList.messageID();
+        } else if (record instanceof ServerInfoFromDatabase serverInfo) {
+            channelId = serverInfo.channelID();
+            messageId = serverInfo.messageID();
+        } else {
+            throw new IllegalArgumentException("Unsupported record type");
+        }
 
         TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
         if (channel != null) {
             channel.retrieveMessageById(messageId).queue(
-                    message -> updatePlayerListEmbed(
-                            Bot.storageManager.getServerInfo(playerList.serverName(), playerList.guildID()), message),
+                    message -> {
+                        if (record instanceof PlayerListDataRecord) {
+                            updatePlayerListEmbed(Bot.storageManager.getServerInfo(
+                                    ((PlayerListDataRecord) record).serverName(),
+                                    ((PlayerListDataRecord) record).guildID()), message);
+                        } else {
+                            updateStatusEmbed((ServerInfoFromDatabase) record, message, channel);
+                        }
+                    },
                     exception -> {
-                        if (Bot.storageManager.removePlayerListByMessageId(playerList.guildID(), messageId)) {
-                            Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database" + " " + exception.getMessage());
+                        if (record instanceof PlayerListDataRecord) {
+                            if (Bot.storageManager.removePlayerListByMessageId(
+                                    ((PlayerListDataRecord) record).guildID(), messageId)) {
+                                Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database" + " " + exception.getMessage());
+                            }
+                        } else {
+                            if (Bot.storageManager.deactivateServerByMessageId(
+                                    ((ServerInfoFromDatabase) record).guildId(), messageId)) {
+                                Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database" + " " + exception.getMessage());
+                            }
                         }
                     });
         }
-        return null;
-    }
 
-    @Nullable
-    private Void getStatusEmbed(@NotNull ServerInfoFromDatabase serverInfoFromDatabase) {
-        String channelId = serverInfoFromDatabase.channelID();
-        String messageId = serverInfoFromDatabase.messageID();
-
-        TextChannel channel = Bot.getShardManager().getTextChannelById(channelId);
-        if (channel != null) {
-            channel.retrieveMessageById(messageId).queue(
-                    message -> updateStatusEmbed(serverInfoFromDatabase, message, channel),
-                    exception -> {
-                        if (Bot.storageManager.deactivateServerByMessageId(serverInfoFromDatabase.guildId(), messageId)) {
-                            Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database" + " " + exception.getMessage());
-                        }
-                    });
-        }
         return null;
     }
 
     private void updateStatusEmbed(ServerInfoFromDatabase serverData, Message message, TextChannel channel) {
         if (message != null) {
             try {
-                MinecraftServerInfo info = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort(), serverData.platform()).getServerInfo();
+                MinecraftServerInfo info = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort()).getServerInfo(serverData.platform());
                 MessageEmbed updatedEmbed = StatusEmbedBuilder.sendStatusEmbed(serverData, info);
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {
@@ -116,7 +124,7 @@ public class EmbedUpdater {
     private void updatePlayerListEmbed(ServerInfoFromDatabase serverData, Message message) {
         if (message != null) {
             try {
-                MinecraftServerInfo info = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort(), serverData.platform()).getServerInfo();
+                MinecraftServerInfo info = new MinecraftStatus(serverData.serverAddress(), serverData.serverPort()).getServerInfo(serverData.platform());
                 MessageEmbed updatedEmbed = PlayerListEmbedBuilder.playerListEmbed(serverData.serverAddress(), info);
                 message.editMessageEmbeds(updatedEmbed).queue(
                         success -> {

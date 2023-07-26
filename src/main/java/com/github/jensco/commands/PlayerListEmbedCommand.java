@@ -88,7 +88,7 @@ public class PlayerListEmbedCommand extends SlashCommand {
 
         @NotNull
         private static MessageEmbed handle(@NotNull ServerInfoFromDatabase info) {
-            MinecraftServerInfo data = new MinecraftStatus(info.serverAddress(), info.serverPort(), info.platform()).getServerInfo();
+            MinecraftServerInfo data = new MinecraftStatus(info.serverAddress(), info.serverPort()).getServerInfo(info.platform());
             // create server status embed
             return PlayerListEmbedBuilder.playerListEmbed(
                     info.serverAddress(),

@@ -183,7 +183,7 @@ public class ServerCommand extends SlashCommand {
         }
 
         // Create a ServerPing instance and ping the server
-        MinecraftServerInfo serverInfo = new MinecraftStatus(serverAddress, serverPort, null).getServerInfo();
+        MinecraftServerInfo serverInfo = new MinecraftStatus(serverAddress, serverPort).getServerInfo(null);
 
         if (serverInfo == null) {
             return MessageHelper.errorResponse(null, "Server Settings", "The ip you provided is invalid");

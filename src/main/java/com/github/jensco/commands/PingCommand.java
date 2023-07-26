@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 public class PingCommand extends SlashCommand {
     public PingCommand() {
@@ -44,7 +43,7 @@ public class PingCommand extends SlashCommand {
         }
 
         // Create a ServerPing instance and ping the server
-        MinecraftServerInfo serverInfo = new MinecraftStatus(ip, port, null).getServerInfo();
+        MinecraftServerInfo serverInfo = new MinecraftStatus(ip, port).getServerInfo(null);
 
         if (serverInfo == null) {
             return MessageHelper.errorResponse(null, "Server Settings", "The ip you provided is invalid");
