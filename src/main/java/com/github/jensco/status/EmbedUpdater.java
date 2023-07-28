@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,15 +80,22 @@ public class EmbedUpdater {
                         }
                     },
                     exception -> {
-                        if (record instanceof PlayerListDataRecord) {
-                            if (Bot.storageManager.removePlayerListByMessageId(
-                                    ((PlayerListDataRecord) record).guildID(), messageId)) {
-                                Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database" + " " + exception.getMessage());
-                            }
-                        } else {
-                            if (Bot.storageManager.deactivateServerByMessageId(
-                                    ((ServerInfoFromDatabase) record).guildId(), messageId)) {
-                                Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database" + " " + exception.getMessage());
+                        // Check if the exception is of type ErrorResponseException and has error code 10008
+                        if (exception instanceof ErrorResponseException errorResponseException) {
+                            if (errorResponseException.getErrorCode() == 10008) {
+                                if (record instanceof PlayerListDataRecord) {
+                                    Bot.storageManager.removePlayerListByMessageId(
+                                            ((PlayerListDataRecord) record).guildID(), messageId);
+                                } else {
+                                    Bot.storageManager.deactivateServerByMessageId(
+                                            ((ServerInfoFromDatabase) record).guildId(), messageId);
+                                }
+
+                                Bot.LOGGER.info("Embed with ID " + messageId + " has been removed from the database for reason: " + exception.getMessage());
+
+                            } else {
+                               Bot.LOGGER.warn(exception.getMessage());
+                               exception.printStackTrace();
                             }
                         }
                     });
