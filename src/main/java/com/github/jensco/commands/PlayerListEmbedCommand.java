@@ -23,7 +23,7 @@ public class PlayerListEmbedCommand extends SlashCommand {
 
     public PlayerListEmbedCommand() {
         this.name = "playerlist";
-        this.help = "PlayerList embed commands.";
+        this.help = "View a demo portion of online player names";
         this.guildOnly = false;
         this.children = new SlashCommand[]{
                 new EnablePlayerListEmbedSubCommand(),

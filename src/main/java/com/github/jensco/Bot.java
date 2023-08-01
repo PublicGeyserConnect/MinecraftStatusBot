@@ -11,6 +11,7 @@ import com.github.jensco.storage.StorageType;
 import com.github.jensco.util.PropertiesManager;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
@@ -130,7 +131,7 @@ public class Bot {
     }
 
     @NotNull
-    private static SlashCommand[] getSlashCommands() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
+    public static SlashCommand[] getSlashCommands() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         Reflections reflections = new Reflections("com.github.jensco.commands");
         Set<Class<? extends SlashCommand>> subTypes = reflections.getSubTypesOf(SlashCommand.class);
         List<SlashCommand> commands = new ArrayList<>();

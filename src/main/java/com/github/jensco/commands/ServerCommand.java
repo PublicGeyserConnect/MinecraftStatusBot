@@ -23,7 +23,7 @@ public class ServerCommand extends SlashCommand {
 
     public ServerCommand() {
         this.name = "server";
-        this.help = "server options";
+        this.help = "Add or remove server (max 5) - Add a thumbnail on the status embed - Get a list of servers";
         this.guildOnly = false;
         this.children = new SlashCommand[]{
                 new AddServerSubCommand(),

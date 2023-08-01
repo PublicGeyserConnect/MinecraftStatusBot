@@ -19,7 +19,7 @@ public class NotificationCommand extends SlashCommand {
 
     public NotificationCommand() {
         this.name = "notify";
-        this.help = "Notify options";
+        this.help = "Enable or disable notifications when a server is down - Specify a role that will be notified";
         this.guildOnly = false;
         this.children =
                 new SlashCommand[]{

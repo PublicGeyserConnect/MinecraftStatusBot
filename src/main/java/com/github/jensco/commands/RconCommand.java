@@ -20,7 +20,7 @@ public class RconCommand extends SlashCommand {
 
     public RconCommand() {
         this.name = "rcon";
-        this.help = "Rcon options";
+        this.help = "Set or delete a rcon connection - login and send commands to your server for max 30 min each time.";
         this.guildOnly = false;
         this.children =
                 new SlashCommand[]{

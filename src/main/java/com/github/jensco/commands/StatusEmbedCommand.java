@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class StatusEmbedCommand extends SlashCommand {
     public StatusEmbedCommand() {
         this.name = "status";
-        this.help = "Status embed commands";
+        this.help = "Enable or disable status embed for s given server.";
         this.guildOnly = false;
         this.children = new SlashCommand[]{
                 new EnableMinecraftStatusEmbedSubCommand(),
