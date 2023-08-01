@@ -15,7 +15,7 @@ public class HelpCommand extends SlashCommand {
 
     public HelpCommand() {
         this.name = "help";
-        this.help = "I think you already know what this does";
+        this.help = "Not sure what this does. Can you help me out?";
         this.guildOnly = false;
     }
 
