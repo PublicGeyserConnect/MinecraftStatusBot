@@ -59,21 +59,31 @@ public class PropertiesManager {
     }
 
     /**
-     * @return totalShards
+     * @return TotalShards
      */
     public static String getTotalShards() {
         return properties.getProperty("total-shards");
     }
 
     /**
-     * @return serverName
+     * @return ServerName
      */
     public static String getServerName() {
         return properties.getProperty("server-name");
     }
 
+    /**
+     * @return Endpoint URL
+     */
     public static String getEndpointUrl() {
         return properties.getProperty("endpoint-url");
+    }
+
+    /**
+     * @return loop delay
+     */
+    public static String getLoopDelay() {
+        return properties.getProperty("delay");
     }
 
 }

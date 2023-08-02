@@ -11,7 +11,6 @@ import com.github.jensco.storage.StorageType;
 import com.github.jensco.util.PropertiesManager;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.command.SlashCommand;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
@@ -31,10 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -116,18 +112,20 @@ public class Bot {
             System.exit(1);
         }
 
-        generalThreadPool.scheduleAtFixedRate(() -> {
-            shardManager.getShardById(0).getPresence().setActivity(Activity.watching(storageManager.getActiveServerCount() + " active servers."));
-        }, 5, 60 * 5, TimeUnit.SECONDS);
+        generalThreadPool.scheduleAtFixedRate(() -> Objects.requireNonNull(
+                shardManager.getShardById(Integer.parseInt(PropertiesManager.getShardsId())))
+                .getPresence()
+                .setActivity(Activity.watching(storageManager.getActiveServerCount() + " active servers."))
+                , 5, 60 * 5, TimeUnit.SECONDS);
 
         rconDataCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .build();
 
+        LOGGER.info("MinecraftStatusBot has been started");
+
         EmbedUpdater statusUpdater = new EmbedUpdater();
         statusUpdater.startUpdateLoop();
-
-        LOGGER.info("MinecraftStatusBot has been started");
     }
 
     @NotNull

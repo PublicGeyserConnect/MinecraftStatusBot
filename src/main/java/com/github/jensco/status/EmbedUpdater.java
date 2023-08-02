@@ -5,6 +5,7 @@ import com.github.jensco.records.MinecraftServerInfo;
 import com.github.jensco.records.NotificationRecord;
 import com.github.jensco.records.PlayerListDataRecord;
 import com.github.jensco.records.ServerInfoFromDatabase;
+import com.github.jensco.util.PropertiesManager;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
@@ -20,6 +21,7 @@ import java.util.concurrent.*;
 public class EmbedUpdater {
     private final ScheduledExecutorService executorService;
     private final Map<String, Integer> offlineCountMap = new ConcurrentHashMap<>();
+    private final int DELAY = Integer.parseInt(PropertiesManager.getLoopDelay());
 
     public EmbedUpdater() {
         executorService = Executors.newScheduledThreadPool(6);
@@ -165,7 +167,7 @@ public class EmbedUpdater {
 
     private void delayForSeconds() {
         ScheduledFuture<?> delayFuture = executorService.schedule(() -> {
-        }, 8, TimeUnit.SECONDS);
+        }, DELAY, TimeUnit.SECONDS);
         try {
             delayFuture.get();
         } catch (InterruptedException | ExecutionException e) {
